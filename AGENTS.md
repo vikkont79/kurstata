@@ -166,6 +166,15 @@ export default function Page({ params }: { params: { id: string } }) {
 
 ---
 
+## Правило: проверка API
+
+Перед созданием файлов конфигурации (drizzle.config.ts, next.config.ts и т.д.) — **проверять актуальный API** зависимости:
+- `node_modules/{package}/package.json` — версия
+- `node_modules/{package}/dist/` — типы/документация
+- npm-страница или оф. доки, если типов недостаточно
+
+Не полагаться на предыдущий опыт — API мог измениться.
+
 ## Заметки по стек-версиям
 
 - Next.js `^16.2.12` — перед написанием кода проверять `node_modules/next/dist/docs/` на актуальные API
