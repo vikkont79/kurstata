@@ -5,3 +5,12 @@ export type Day = {
   createdAt: string | null
   updatedAt: string | null
 }
+
+export type DayWithShifts = Day & {
+  shifts: Array<{
+    id: string
+    startTime: string
+    endTime: string
+    orders: number
+  }>
+}

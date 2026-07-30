@@ -1,1 +1,1 @@
-export type { Day } from './types'
+export type { Day, DayWithShifts } from './types'
