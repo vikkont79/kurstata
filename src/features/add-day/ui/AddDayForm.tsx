@@ -11,13 +11,30 @@ import { Label } from '@/shared/ui/label/Label'
 import { ConfirmModal } from '@/shared/ui/confirm-modal/ConfirmModal'
 import { formSchema, type FormValues } from '@/features/add-day/types'
 import { saveDay } from '@/features/add-day/api/saveDay'
+import type { DayWithShifts } from '@/entities/day/types'
 
 const resolver = zodResolver(formSchema) as unknown as Resolver<FormValues>
 
 const today = () => new Date().toISOString().split('T')[0]
 
-const AddDayForm = () => {
+const getDefaultValues = (initialData: DayWithShifts | undefined): FormValues => {
+  if (initialData) {
+    return {
+      date: initialData.date,
+      dayTotal: initialData.dayTotal ?? 0,
+      shifts: initialData.shifts.map(s => ({
+        startTime: s.startTime,
+        endTime: s.endTime,
+        orders: s.orders,
+      })),
+    }
+  }
+  return { date: today(), shifts: [], dayTotal: 0 }
+}
+
+const AddDayForm = ({ initialData }: { initialData?: DayWithShifts }) => {
   const [deleteIndex, setDeleteIndex] = useState<number | null>(null)
+  const isEditing = !!initialData
 
   const {
     register,
@@ -26,11 +43,7 @@ const AddDayForm = () => {
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     resolver,
-    defaultValues: {
-      date: today(),
-      shifts: [],
-      dayTotal: 0,
-    },
+    defaultValues: getDefaultValues(initialData),
   })
 
   const { fields, append, remove } = useFieldArray({
@@ -56,11 +69,9 @@ const AddDayForm = () => {
   return (
     <>
       <form onSubmit={handleSubmit(onSubmit)} className="mx-auto flex w-full max-w-lg flex-col gap-6">
-        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">Добавить день</h1>
-
         <Label error={errors.date?.message}>
           Дата
-          <Input type="date" hasError={!!errors.date} {...register('date')} />
+          <Input type="date" hasError={!!errors.date} readOnly={isEditing} {...register('date')} />
         </Label>
 
         <div className="flex flex-col gap-3">
