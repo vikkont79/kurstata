@@ -181,3 +181,21 @@ export default function Page({ params }: { params: { id: string } }) {
 - React `^19.2.4`
 - Tailwind CSS `^4`
 - ESLint Flat Config (`eslint.config.mjs`)
+
+## Окружение (bash-команды)
+
+Проект лежит на WSL-файловой системе, но bash-инструмент запускает PowerShell.
+Исполняемые файлы в WSL недоступны в PATH из PowerShell. Запускать через `wsl <full-path>`:
+
+- `pnpm`: `/home/vikkont/.local/share/pnpm/pnpm`
+- `node`: `/home/vikkont/.local/share/pnpm/nodejs/22.21.1/bin/node`
+
+Пример установки зависимости:
+```powershell
+wsl /home/vikkont/.local/share/pnpm/pnpm add package-name
+```
+
+Пример сборки (требуется node в PATH):
+```powershell
+wsl env PATH="/home/vikkont/.local/share/pnpm/nodejs/22.21.1/bin:$PATH" /home/vikkont/.local/share/pnpm/nodejs/22.21.1/bin/node node_modules/next/dist/bin/next build
+```
