@@ -18,5 +18,4 @@ export const shifts = sqliteTable('shifts', {
   endTime: text('end_time').notNull(),
   orders: integer('orders').notNull().default(0),
   createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`),
 })

@@ -1,8 +1,9 @@
 'use server'
 
+import { revalidatePath } from 'next/cache'
 import { db } from '@db/client'
 import { days, shifts } from '@db/schema'
-import { eq } from 'drizzle-orm'
+import { eq, sql } from 'drizzle-orm'
 import { formSchema } from '@/features/add-day/types'
 
 export async function saveDay(formData: FormData): Promise<{ success: true } | { success: false; error: string }> {
@@ -21,37 +22,29 @@ export async function saveDay(formData: FormData): Promise<{ success: true } | {
 
     const { date, dayTotal, shifts: shiftsData } = parsed.data
 
-    const existing = await db.select({ id: days.id }).from(days).where(eq(days.date, date)).limit(1)
-    const existingDay = existing[0]
-
-    if (existingDay) {
-      await db.update(days).set({ dayTotal }).where(eq(days.id, existingDay.id))
-      await db.delete(shifts).where(eq(shifts.dayId, existingDay.id))
-
-      for (const shift of shiftsData) {
-        await db.insert(shifts).values({
-          id: crypto.randomUUID(),
-          dayId: existingDay.id,
-          startTime: shift.startTime,
-          endTime: shift.endTime,
-          orders: shift.orders,
+    await db.transaction(async (tx) => {
+      const [{ id: dayId }] = await tx.insert(days)
+        .values({ date, dayTotal })
+        .onConflictDoUpdate({
+          target: days.date,
+          set: { dayTotal, updatedAt: sql`CURRENT_TIMESTAMP` },
         })
-      }
-    } else {
-      const dayId = crypto.randomUUID()
+        .returning({ id: days.id })
 
-      await db.insert(days).values({ id: dayId, date, dayTotal })
+      await tx.delete(shifts).where(eq(shifts.dayId, dayId))
 
-      for (const shift of shiftsData) {
-        await db.insert(shifts).values({
+      await tx.insert(shifts).values(
+        shiftsData.map((shift) => ({
           id: crypto.randomUUID(),
           dayId,
           startTime: shift.startTime,
           endTime: shift.endTime,
           orders: shift.orders,
-        })
-      }
-    }
+        })),
+      )
+    })
+
+    revalidatePath('/')
 
     return { success: true }
   } catch (err) {
