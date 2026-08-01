@@ -2,18 +2,18 @@
 
 import { useState } from 'react'
 import { useForm, useFieldArray } from 'react-hook-form'
-import type { Resolver } from 'react-hook-form'
+import { useRouter } from 'next/navigation'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { Button } from '@/shared/ui/button/Button'
 import { Input } from '@/shared/ui/input/Input'
 import { Label } from '@/shared/ui/label/Label'
 import { ConfirmModal } from '@/shared/ui/confirm-modal/ConfirmModal'
-import { formSchema, type FormValues } from '@/features/add-day/types'
+import { formSchema, type FormInput, type FormValues } from '@/features/add-day/types'
 import { saveDay } from '@/features/add-day/api/saveDay'
 import type { DayWithShifts } from '@/entities/day/types'
 
-const resolver = zodResolver(formSchema) as unknown as Resolver<FormValues>
+const resolver = zodResolver(formSchema)
 
 const today = () => new Date().toISOString().split('T')[0]
 
@@ -33,7 +33,9 @@ const getDefaultValues = (initialData: DayWithShifts | undefined): FormValues =>
 }
 
 const AddDayForm = ({ initialData }: { initialData?: DayWithShifts }) => {
+  const router = useRouter()
   const [deleteIndex, setDeleteIndex] = useState<number | null>(null)
+  const [serverError, setServerError] = useState<string | null>(null)
   const isEditing = !!initialData
 
   const {
@@ -41,7 +43,7 @@ const AddDayForm = ({ initialData }: { initialData?: DayWithShifts }) => {
     handleSubmit,
     control,
     formState: { errors, isSubmitting },
-  } = useForm<FormValues>({
+  } = useForm<FormInput, unknown, FormValues>({
     resolver,
     defaultValues: getDefaultValues(initialData),
   })
@@ -52,23 +54,33 @@ const AddDayForm = ({ initialData }: { initialData?: DayWithShifts }) => {
   })
 
   const onSubmit = async (data: FormValues) => {
-    const formData = new FormData()
-    formData.set('date', data.date)
-    formData.set('dayTotal', String(data.dayTotal))
-    formData.set('shifts', JSON.stringify(data.shifts))
+    setServerError(null)
 
-    const result = await saveDay(formData)
+    try {
+      const formData = new FormData()
+      formData.set('date', data.date)
+      formData.set('dayTotal', String(data.dayTotal))
+      formData.set('shifts', JSON.stringify(data.shifts))
 
-    if (result.success) {
+      const result = await saveDay(formData)
+
+      if (!result.success) {
+        setServerError(result.error)
+        toast.error('Ошибка сохранения')
+        return
+      }
+
       toast.success('Сохранено')
-    } else {
-      toast.error(result.error)
+      router.push('/')
+    } catch {
+      setServerError('Не удалось сохранить данные')
+      toast.error('Ошибка сохранения')
     }
   }
 
   return (
     <>
-      <form onSubmit={handleSubmit(onSubmit)} className="mx-auto flex w-full max-w-lg flex-col gap-6">
+      <form noValidate onSubmit={handleSubmit(onSubmit)} className="mx-auto flex w-full max-w-lg flex-col gap-6">
         <Label error={errors.date?.message}>
           Дата
           <Input type="date" hasError={!!errors.date} readOnly={isEditing} {...register('date')} />
@@ -162,6 +174,12 @@ const AddDayForm = ({ initialData }: { initialData?: DayWithShifts }) => {
             {...register('dayTotal')}
           />
         </Label>
+
+        {serverError && (
+          <p className="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
+            {serverError}
+          </p>
+        )}
 
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? 'Сохранение…' : 'Сохранить'}

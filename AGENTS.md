@@ -149,7 +149,7 @@ export default function Page({ params }: { params: { id: string } }) {
 ## Обязательные проверки перед коммитом
 
 1. **Lint:** `pnpm lint` — без ошибок и предупреждений
-2. **Build:** `pnpm build` — проект должен собираться (включает проверку типов)
+2. **Types:** `pnpm tsc --noEmit` — проект должен собираться (включает проверку типов)
 3. **Tailwind:** не использовать устаревшие директивы `@tailwind` / `@apply` (Tailwind v4 использует `@import "tailwindcss"`)
 
 ---
