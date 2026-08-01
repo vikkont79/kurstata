@@ -15,4 +15,5 @@ export const formSchema = z.object({
   dayTotal: z.coerce.number().min(0, 'Сумма должна быть >= 0'),
 })
 
+export type FormInput = z.input<typeof formSchema>
 export type FormValues = z.infer<typeof formSchema>

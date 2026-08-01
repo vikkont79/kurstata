@@ -48,6 +48,7 @@ export async function saveDay(formData: FormData): Promise<{ success: true } | {
 
     return { success: true }
   } catch (err) {
+    console.error('saveDay: ошибка сохранения дня', err)
     if (err instanceof Error) {
       return { success: false, error: err.message }
     }
