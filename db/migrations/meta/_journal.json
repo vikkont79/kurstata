@@ -8,6 +8,13 @@
       "when": 1785394409346,
       "tag": "0000_common_omega_flight",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1785507083086,
+      "tag": "0001_purple_maddog",
+      "breakpoints": true
     }
   ]
 }
