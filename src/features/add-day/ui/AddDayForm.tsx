@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { useRouter } from 'next/navigation'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -9,8 +9,9 @@ import { Button } from '@/shared/ui/button/Button'
 import { Input } from '@/shared/ui/input/Input'
 import { Label } from '@/shared/ui/label/Label'
 import { ConfirmModal } from '@/shared/ui/confirm-modal/ConfirmModal'
-import { formSchema, type FormInput, type FormValues } from '@/features/add-day/types'
+import { formSchema, type FormValues } from '@/features/add-day/types'
 import { saveDay } from '@/features/add-day/api/saveDay'
+import { useDayDraft } from '@/features/add-day/lib'
 import type { DayWithShifts } from '@/entities/day/types'
 
 const resolver = zodResolver(formSchema)
@@ -34,16 +35,21 @@ const getDefaultValues = (initialData: DayWithShifts | undefined): FormValues =>
 
 const AddDayForm = ({ initialData }: { initialData?: DayWithShifts }) => {
   const router = useRouter()
+  const identity = initialData?.date ?? 'new'
   const [deleteIndex, setDeleteIndex] = useState<number | null>(null)
+  const [isResetOpen, setIsResetOpen] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
   const isEditing = !!initialData
+  const { draft, scheduleSave, flush, clearDraft } = useDayDraft(identity)
 
   const {
     register,
     handleSubmit,
+    reset,
+    getValues,
     control,
     formState: { errors, isSubmitting },
-  } = useForm<FormInput, unknown, FormValues>({
+  } = useForm<FormValues>({
     resolver,
     defaultValues: getDefaultValues(initialData),
   })
@@ -53,16 +59,36 @@ const AddDayForm = ({ initialData }: { initialData?: DayWithShifts }) => {
     name: 'shifts',
   })
 
+  useEffect(() => {
+    if (draft) {
+      reset(draft)
+    }
+  }, [draft, reset])
+
+  useEffect(() => {
+    return () => flush()
+  }, [flush])
+
+  useEffect(() => {
+    const handlePageHide = () => flush()
+    window.addEventListener('pagehide', handlePageHide)
+    return () => window.removeEventListener('pagehide', handlePageHide)
+  }, [flush])
+
+  const handleFormChange = () => {
+    scheduleSave(getValues())
+  }
+
+  const handleReset = () => {
+    reset(getDefaultValues(initialData))
+    clearDraft()
+  }
+
   const onSubmit = async (data: FormValues) => {
     setServerError(null)
 
     try {
-      const formData = new FormData()
-      formData.set('date', data.date)
-      formData.set('dayTotal', String(data.dayTotal))
-      formData.set('shifts', JSON.stringify(data.shifts))
-
-      const result = await saveDay(formData)
+      const result = await saveDay(data)
 
       if (!result.success) {
         setServerError(result.error)
@@ -70,6 +96,7 @@ const AddDayForm = ({ initialData }: { initialData?: DayWithShifts }) => {
         return
       }
 
+      clearDraft()
       toast.success('Сохранено')
       router.push('/')
     } catch {
@@ -80,7 +107,13 @@ const AddDayForm = ({ initialData }: { initialData?: DayWithShifts }) => {
 
   return (
     <>
-      <form noValidate onSubmit={handleSubmit(onSubmit)} className="mx-auto flex w-full max-w-lg flex-col gap-6">
+      <form
+        noValidate
+        onBlur={flush}
+        onChange={handleFormChange}
+        onSubmit={handleSubmit(onSubmit)}
+        className="mx-auto flex w-full max-w-lg flex-col gap-6"
+      >
         <Label error={errors.date?.message}>
           Дата
           <Input type="date" hasError={!!errors.date} readOnly={isEditing} {...register('date')} />
@@ -92,7 +125,10 @@ const AddDayForm = ({ initialData }: { initialData?: DayWithShifts }) => {
             <Button
               type="button"
               variant="secondary"
-              onClick={() => append({ startTime: '', endTime: '', orders: 0 })}
+              onClick={() => {
+                append({ startTime: '', endTime: '', orders: 0 })
+                scheduleSave(getValues())
+              }}
             >
               + Добавить смену
             </Button>
@@ -143,7 +179,7 @@ const AddDayForm = ({ initialData }: { initialData?: DayWithShifts }) => {
                     type="number"
                     min={0}
                     hasError={!!shiftErrors?.orders}
-                    {...register(`shifts.${index}.orders`)}
+                    {...register(`shifts.${index}.orders`, { valueAsNumber: true })}
                   />
                 </Label>
 
@@ -171,7 +207,7 @@ const AddDayForm = ({ initialData }: { initialData?: DayWithShifts }) => {
             step="any"
             min={0}
             hasError={!!errors.dayTotal}
-            {...register('dayTotal')}
+            {...register('dayTotal', { valueAsNumber: true })}
           />
         </Label>
 
@@ -181,9 +217,14 @@ const AddDayForm = ({ initialData }: { initialData?: DayWithShifts }) => {
           </p>
         )}
 
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Сохранение…' : 'Сохранить'}
-        </Button>
+        <div className="flex gap-3">
+          <Button type="submit" disabled={isSubmitting} className="flex-1">
+            {isSubmitting ? 'Сохранение…' : 'Сохранить'}
+          </Button>
+          <Button type="button" variant="secondary" onClick={() => setIsResetOpen(true)}>
+            Сбросить
+          </Button>
+        </div>
       </form>
 
       <ConfirmModal
@@ -194,9 +235,22 @@ const AddDayForm = ({ initialData }: { initialData?: DayWithShifts }) => {
           if (deleteIndex !== null) {
             remove(deleteIndex)
             setDeleteIndex(null)
+            scheduleSave(getValues())
           }
         }}
         onCancel={() => setDeleteIndex(null)}
+      />
+
+      <ConfirmModal
+        open={isResetOpen}
+        title="Сбросить данные?"
+        message="Все введённые данные будут очищены."
+        confirmLabel="Сбросить"
+        onConfirm={() => {
+          handleReset()
+          setIsResetOpen(false)
+        }}
+        onCancel={() => setIsResetOpen(false)}
       />
     </>
   )

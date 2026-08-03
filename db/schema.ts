@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core'
+import { sqliteTable, text, integer, real, index } from 'drizzle-orm/sqlite-core'
 import { sql } from 'drizzle-orm'
 
 export const days = sqliteTable('days', {
@@ -18,4 +18,6 @@ export const shifts = sqliteTable('shifts', {
   endTime: text('end_time').notNull(),
   orders: integer('orders').notNull().default(0),
   createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
-})
+}, (table) => [
+  index('shifts_day_id_idx').on(table.dayId),
+])
