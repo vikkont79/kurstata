@@ -15,6 +15,13 @@
       "when": 1785507083086,
       "tag": "0001_purple_maddog",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1785761217295,
+      "tag": "0002_daffy_morg",
+      "breakpoints": true
     }
   ]
 }

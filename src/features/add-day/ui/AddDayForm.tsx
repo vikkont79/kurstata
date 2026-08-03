@@ -9,7 +9,7 @@ import { Button } from '@/shared/ui/button/Button'
 import { Input } from '@/shared/ui/input/Input'
 import { Label } from '@/shared/ui/label/Label'
 import { ConfirmModal } from '@/shared/ui/confirm-modal/ConfirmModal'
-import { formSchema, type FormInput, type FormValues } from '@/features/add-day/types'
+import { formSchema, type FormValues } from '@/features/add-day/types'
 import { saveDay } from '@/features/add-day/api/saveDay'
 import { useDayDraft } from '@/features/add-day/lib'
 import type { DayWithShifts } from '@/entities/day/types'
@@ -37,6 +37,7 @@ const AddDayForm = ({ initialData }: { initialData?: DayWithShifts }) => {
   const router = useRouter()
   const identity = initialData?.date ?? 'new'
   const [deleteIndex, setDeleteIndex] = useState<number | null>(null)
+  const [isResetOpen, setIsResetOpen] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
   const isEditing = !!initialData
   const { draft, scheduleSave, flush, clearDraft } = useDayDraft(identity)
@@ -48,7 +49,7 @@ const AddDayForm = ({ initialData }: { initialData?: DayWithShifts }) => {
     getValues,
     control,
     formState: { errors, isSubmitting },
-  } = useForm<FormInput, unknown, FormValues>({
+  } = useForm<FormValues>({
     resolver,
     defaultValues: getDefaultValues(initialData),
   })
@@ -87,12 +88,7 @@ const AddDayForm = ({ initialData }: { initialData?: DayWithShifts }) => {
     setServerError(null)
 
     try {
-      const formData = new FormData()
-      formData.set('date', data.date)
-      formData.set('dayTotal', String(data.dayTotal))
-      formData.set('shifts', JSON.stringify(data.shifts))
-
-      const result = await saveDay(formData)
+      const result = await saveDay(data)
 
       if (!result.success) {
         setServerError(result.error)
@@ -183,7 +179,7 @@ const AddDayForm = ({ initialData }: { initialData?: DayWithShifts }) => {
                     type="number"
                     min={0}
                     hasError={!!shiftErrors?.orders}
-                    {...register(`shifts.${index}.orders`)}
+                    {...register(`shifts.${index}.orders`, { valueAsNumber: true })}
                   />
                 </Label>
 
@@ -211,7 +207,7 @@ const AddDayForm = ({ initialData }: { initialData?: DayWithShifts }) => {
             step="any"
             min={0}
             hasError={!!errors.dayTotal}
-            {...register('dayTotal')}
+            {...register('dayTotal', { valueAsNumber: true })}
           />
         </Label>
 
@@ -225,7 +221,7 @@ const AddDayForm = ({ initialData }: { initialData?: DayWithShifts }) => {
           <Button type="submit" disabled={isSubmitting} className="flex-1">
             {isSubmitting ? 'Сохранение…' : 'Сохранить'}
           </Button>
-          <Button type="button" variant="secondary" onClick={handleReset}>
+          <Button type="button" variant="secondary" onClick={() => setIsResetOpen(true)}>
             Сбросить
           </Button>
         </div>
@@ -243,6 +239,18 @@ const AddDayForm = ({ initialData }: { initialData?: DayWithShifts }) => {
           }
         }}
         onCancel={() => setDeleteIndex(null)}
+      />
+
+      <ConfirmModal
+        open={isResetOpen}
+        title="Сбросить данные?"
+        message="Все введённые данные будут очищены."
+        confirmLabel="Сбросить"
+        onConfirm={() => {
+          handleReset()
+          setIsResetOpen(false)
+        }}
+        onCancel={() => setIsResetOpen(false)}
       />
     </>
   )

@@ -1,0 +1,1 @@
+CREATE INDEX `shifts_day_id_idx` ON `shifts` (`day_id`);

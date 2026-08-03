@@ -6,18 +6,11 @@ import { days, shifts } from '@db/schema'
 import { eq, sql } from 'drizzle-orm'
 import { formSchema } from '@/features/add-day/types'
 
-export async function saveDay(formData: FormData): Promise<{ success: true } | { success: false; error: string }> {
+export async function saveDay(input: unknown): Promise<{ success: true } | { success: false; error: string }> {
   try {
-    const raw = {
-      date: formData.get('date') as string,
-      dayTotal: formData.get('dayTotal') as string,
-      shifts: JSON.parse(formData.get('shifts') as string),
-    }
-
-    const parsed = formSchema.safeParse(raw)
+    const parsed = formSchema.safeParse(input)
     if (!parsed.success) {
-      const firstError = parsed.error.issues[0]
-      return { success: false, error: firstError?.message ?? 'Ошибка валидации' }
+      return { success: false, error: parsed.error.issues[0]?.message ?? 'Ошибка валидации' }
     }
 
     const { date, dayTotal, shifts: shiftsData } = parsed.data
