@@ -10,7 +10,7 @@ const AddPage = async ({ date }: { date?: string }) => {
   return (
     <>
       <Header
-        title={date ? 'Редактировать день' : 'Добавить день'}
+        title={date ? 'Редактировать' : 'Добавить день'}
         link={{ href: '/', label: '← На главную' }}
         className="w-full max-w-4xl mx-auto px-4 pt-10"
         user={user}

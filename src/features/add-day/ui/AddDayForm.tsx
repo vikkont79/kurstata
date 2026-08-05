@@ -85,9 +85,10 @@ const AddDayForm = ({ initialData }: { initialData?: DayWithShifts }) => {
 
   const onSubmit = async (data: FormValues) => {
     setServerError(null)
+    const payload = isEditing ? { ...data, date: getDefaultValues(initialData).date } : data
 
     try {
-      const result = await saveDay(data)
+      const result = await saveDay(payload)
 
       if (!result.success) {
         setServerError(result.error)
@@ -115,7 +116,7 @@ const AddDayForm = ({ initialData }: { initialData?: DayWithShifts }) => {
       >
         <Label error={errors.date?.message}>
           Дата
-          <Input type="date" hasError={!!errors.date} readOnly={isEditing} {...register('date')} />
+          <Input type="date" hasError={!!errors.date} disabled={isEditing} {...register('date')} />
         </Label>
 
         <div className="flex flex-col gap-3">

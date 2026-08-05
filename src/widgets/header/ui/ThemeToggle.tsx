@@ -28,10 +28,10 @@ const ThemeToggle = () => {
     <button
       type="button"
       onClick={toggleTheme}
-      className={getButtonClassName('secondary')}
+      className={getButtonClassName('secondary', undefined, true)}
       aria-label={isDark ? 'Переключить на светлую тему' : 'Переключить на тёмную тему'}
     >
-      {isDark ? 'Светлая' : 'Тёмная'}
+      {isDark ? '☀️' : '🌙'}
     </button>
   )
 }
