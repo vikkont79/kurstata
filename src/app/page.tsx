@@ -1,5 +1,6 @@
 import { DashboardPage } from '@/sections/dashboard'
 
-export default function Home() {
-  return <DashboardPage />
+export default async function Home({ searchParams }: { searchParams: Promise<{ auth?: string }> }) {
+  const { auth } = await searchParams
+  return <DashboardPage openAuthOnMount={auth === 'open'} />
 }

@@ -37,7 +37,6 @@ const AddDayForm = ({ initialData }: { initialData?: DayWithShifts }) => {
   const router = useRouter()
   const identity = initialData?.date ?? 'new'
   const [deleteIndex, setDeleteIndex] = useState<number | null>(null)
-  const [isResetOpen, setIsResetOpen] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
   const isEditing = !!initialData
   const { draft, scheduleSave, flush, clearDraft } = useDayDraft(identity)
@@ -186,6 +185,8 @@ const AddDayForm = ({ initialData }: { initialData?: DayWithShifts }) => {
                 <Button
                   type="button"
                   variant="ghost"
+                  commandfor="delete-shift-modal"
+                  command="show-modal"
                   className="mb-0.5"
                   onClick={() => setDeleteIndex(index)}
                 >
@@ -221,14 +222,19 @@ const AddDayForm = ({ initialData }: { initialData?: DayWithShifts }) => {
           <Button type="submit" disabled={isSubmitting} className="flex-1">
             {isSubmitting ? 'Сохранение…' : 'Сохранить'}
           </Button>
-          <Button type="button" variant="secondary" onClick={() => setIsResetOpen(true)}>
+          <Button
+            type="button"
+            variant="secondary"
+            commandfor="reset-form-modal"
+            command="show-modal"
+          >
             Сбросить
           </Button>
         </div>
       </form>
 
       <ConfirmModal
-        open={deleteIndex !== null}
+        id="delete-shift-modal"
         title="Удалить смену?"
         message="Это действие нельзя отменить."
         onConfirm={() => {
@@ -242,15 +248,11 @@ const AddDayForm = ({ initialData }: { initialData?: DayWithShifts }) => {
       />
 
       <ConfirmModal
-        open={isResetOpen}
+        id="reset-form-modal"
         title="Сбросить данные?"
         message="Все введённые данные будут очищены."
         confirmLabel="Сбросить"
-        onConfirm={() => {
-          handleReset()
-          setIsResetOpen(false)
-        }}
-        onCancel={() => setIsResetOpen(false)}
+        onConfirm={handleReset}
       />
     </>
   )

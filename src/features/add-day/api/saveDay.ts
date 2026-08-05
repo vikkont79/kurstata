@@ -5,9 +5,15 @@ import { db } from '@db/client'
 import { days, shifts } from '@db/schema'
 import { eq, sql } from 'drizzle-orm'
 import { formSchema } from '@/features/add-day/types'
+import { getCurrentUser } from '@/shared/api/getCurrentUser'
 
 export async function saveDay(input: unknown): Promise<{ success: true } | { success: false; error: string }> {
   try {
+    const user = await getCurrentUser()
+    if (!user) {
+      return { success: false, error: 'Необходимо авторизоваться' }
+    }
+
     const parsed = formSchema.safeParse(input)
     if (!parsed.success) {
       return { success: false, error: parsed.error.issues[0]?.message ?? 'Ошибка валидации' }
@@ -17,9 +23,9 @@ export async function saveDay(input: unknown): Promise<{ success: true } | { suc
 
     await db.transaction(async (tx) => {
       const [{ id: dayId }] = await tx.insert(days)
-        .values({ date, dayTotal })
+        .values({ userId: user.id, date, dayTotal })
         .onConflictDoUpdate({
-          target: days.date,
+          target: [days.userId, days.date],
           set: { dayTotal, updatedAt: sql`CURRENT_TIMESTAMP` },
         })
         .returning({ id: days.id })

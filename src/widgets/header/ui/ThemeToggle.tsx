@@ -1,20 +1,27 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useSyncExternalStore } from 'react'
 import { getButtonClassName } from '@/shared/ui/button/Button'
 
-const ThemeToggle = () => {
-  const [isDark, setIsDark] = useState(false)
+const THEME_EVENT = 'themechange'
 
-  useEffect(() => {
-    setIsDark(document.documentElement.classList.contains('dark'))
-  }, [])
+const getSnapshot = (): boolean => document.documentElement.classList.contains('dark')
+
+const getServerSnapshot = (): boolean => false
+
+const subscribe = (onStoreChange: () => void): (() => void) => {
+  window.addEventListener(THEME_EVENT, onStoreChange)
+  return () => window.removeEventListener(THEME_EVENT, onStoreChange)
+}
+
+const ThemeToggle = () => {
+  const isDark = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
 
   const toggleTheme = () => {
     const next = !isDark
-    setIsDark(next)
     document.documentElement.classList.toggle('dark', next)
     localStorage.setItem('theme', next ? 'dark' : 'light')
+    window.dispatchEvent(new Event(THEME_EVENT))
   }
 
   return (

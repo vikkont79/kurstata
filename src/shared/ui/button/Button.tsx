@@ -1,7 +1,10 @@
 type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost'
+type ButtonCommand = 'show-modal' | 'show' | 'close'
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant
+  command?: ButtonCommand
+  commandfor?: string
 }
 
 const variantStyles: Record<ButtonVariant, string> = {
