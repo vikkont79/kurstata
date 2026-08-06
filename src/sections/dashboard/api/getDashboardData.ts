@@ -1,5 +1,6 @@
 import { db } from '@db/client'
 import { days, shifts } from '@db/schema'
+import { eq, inArray } from 'drizzle-orm'
 import { groupIntoWeeks } from '@/sections/dashboard/lib/groupByWeeks'
 
 function calcHours(start: string, end: string): number {
@@ -8,9 +9,11 @@ function calcHours(start: string, end: string): number {
   return (h2 * 60 + m2 - h1 * 60 - m1) / 60
 }
 
-export async function getDashboardData() {
-  const allDays = await db.select().from(days).orderBy(days.date)
-  const allShifts = await db.select().from(shifts)
+export async function getDashboardData(userId: string) {
+  const allDays = await db.select().from(days).where(eq(days.userId, userId)).orderBy(days.date)
+  const allShifts = allDays.length
+    ? await db.select().from(shifts).where(inArray(shifts.dayId, allDays.map(day => day.id)))
+    : []
 
   const shiftsByDayId = new Map<string, typeof allShifts>()
   for (const s of allShifts) {

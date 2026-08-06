@@ -9,11 +9,10 @@ const shiftSchema = z.object({
   { message: 'Начало должно быть раньше конца', path: ['endTime'] },
 )
 
-export const formSchema = z.object({
+export const addDaySchema = z.object({
   date: z.string().min(1, 'Дата обязательна'),
   shifts: z.array(shiftSchema).min(1, 'Добавьте хотя бы одну смену'),
   dayTotal: z.number().min(0, 'Сумма должна быть >= 0'),
 })
 
-export type FormValues = z.infer<typeof formSchema>
-
+export type AddDayValues = z.infer<typeof addDaySchema>

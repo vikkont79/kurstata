@@ -9,16 +9,16 @@ import { Button } from '@/shared/ui/button/Button'
 import { Input } from '@/shared/ui/input/Input'
 import { Label } from '@/shared/ui/label/Label'
 import { ConfirmModal } from '@/shared/ui/confirm-modal/ConfirmModal'
-import { formSchema, type FormValues } from '@/features/add-day/types'
+import { addDaySchema, type AddDayValues } from '@/features/add-day/types'
 import { saveDay } from '@/features/add-day/api/saveDay'
 import { useDayDraft } from '@/features/add-day/lib'
 import type { DayWithShifts } from '@/entities/day/types'
 
-const resolver = zodResolver(formSchema)
+const resolver = zodResolver(addDaySchema)
 
 const today = () => new Date().toISOString().split('T')[0]
 
-const getDefaultValues = (initialData: DayWithShifts | undefined): FormValues => {
+const getDefaultValues = (initialData: DayWithShifts | undefined): AddDayValues => {
   if (initialData) {
     return {
       date: initialData.date,
@@ -37,7 +37,6 @@ const AddDayForm = ({ initialData }: { initialData?: DayWithShifts }) => {
   const router = useRouter()
   const identity = initialData?.date ?? 'new'
   const [deleteIndex, setDeleteIndex] = useState<number | null>(null)
-  const [isResetOpen, setIsResetOpen] = useState(false)
   const [serverError, setServerError] = useState<string | null>(null)
   const isEditing = !!initialData
   const { draft, scheduleSave, flush, clearDraft } = useDayDraft(identity)
@@ -49,7 +48,7 @@ const AddDayForm = ({ initialData }: { initialData?: DayWithShifts }) => {
     getValues,
     control,
     formState: { errors, isSubmitting },
-  } = useForm<FormValues>({
+  } = useForm<AddDayValues>({
     resolver,
     defaultValues: getDefaultValues(initialData),
   })
@@ -84,11 +83,12 @@ const AddDayForm = ({ initialData }: { initialData?: DayWithShifts }) => {
     clearDraft()
   }
 
-  const onSubmit = async (data: FormValues) => {
+  const onSubmit = async (data: AddDayValues) => {
     setServerError(null)
+    const payload = isEditing ? { ...data, date: getDefaultValues(initialData).date } : data
 
     try {
-      const result = await saveDay(data)
+      const result = await saveDay(payload)
 
       if (!result.success) {
         setServerError(result.error)
@@ -116,7 +116,7 @@ const AddDayForm = ({ initialData }: { initialData?: DayWithShifts }) => {
       >
         <Label error={errors.date?.message}>
           Дата
-          <Input type="date" hasError={!!errors.date} readOnly={isEditing} {...register('date')} />
+          <Input type="date" hasError={!!errors.date} disabled={isEditing} {...register('date')} />
         </Label>
 
         <div className="flex flex-col gap-3">
@@ -186,6 +186,8 @@ const AddDayForm = ({ initialData }: { initialData?: DayWithShifts }) => {
                 <Button
                   type="button"
                   variant="ghost"
+                  commandfor="delete-shift-modal"
+                  command="show-modal"
                   className="mb-0.5"
                   onClick={() => setDeleteIndex(index)}
                 >
@@ -221,14 +223,19 @@ const AddDayForm = ({ initialData }: { initialData?: DayWithShifts }) => {
           <Button type="submit" disabled={isSubmitting} className="flex-1">
             {isSubmitting ? 'Сохранение…' : 'Сохранить'}
           </Button>
-          <Button type="button" variant="secondary" onClick={() => setIsResetOpen(true)}>
+          <Button
+            type="button"
+            variant="secondary"
+            commandfor="reset-form-modal"
+            command="show-modal"
+          >
             Сбросить
           </Button>
         </div>
       </form>
 
       <ConfirmModal
-        open={deleteIndex !== null}
+        id="delete-shift-modal"
         title="Удалить смену?"
         message="Это действие нельзя отменить."
         onConfirm={() => {
@@ -242,15 +249,11 @@ const AddDayForm = ({ initialData }: { initialData?: DayWithShifts }) => {
       />
 
       <ConfirmModal
-        open={isResetOpen}
+        id="reset-form-modal"
         title="Сбросить данные?"
         message="Все введённые данные будут очищены."
         confirmLabel="Сбросить"
-        onConfirm={() => {
-          handleReset()
-          setIsResetOpen(false)
-        }}
-        onCancel={() => setIsResetOpen(false)}
+        onConfirm={handleReset}
       />
     </>
   )

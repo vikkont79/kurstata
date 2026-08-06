@@ -1,13 +1,28 @@
-import { sqliteTable, text, integer, real, index } from 'drizzle-orm/sqlite-core'
+import { sqliteTable, text, integer, real, index, uniqueIndex } from 'drizzle-orm/sqlite-core'
 import { sql } from 'drizzle-orm'
+
+export const users = sqliteTable('users', {
+  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  name: text('name').notNull(),
+  email: text('email').notNull().unique(),
+  passwordHash: text('password_hash').notNull(),
+  failedLoginAttempts: integer('failed_login_attempts').notNull().default(0),
+  lockedUntil: text('locked_until'),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+})
 
 export const days = sqliteTable('days', {
   id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
-  date: text('date').notNull().unique(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  date: text('date').notNull(),
   dayTotal: real('day_total').default(0),
   createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
   updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`),
-})
+}, (table) => [
+  uniqueIndex('days_user_date_unique').on(table.userId, table.date),
+])
 
 export const shifts = sqliteTable('shifts', {
   id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),

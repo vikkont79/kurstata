@@ -1,7 +1,11 @@
 type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost'
+type ButtonCommand = 'show-modal' | 'show' | 'close'
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant
+  command?: ButtonCommand
+  commandfor?: string
+  square?: boolean
 }
 
 const variantStyles: Record<ButtonVariant, string> = {
@@ -11,12 +15,12 @@ const variantStyles: Record<ButtonVariant, string> = {
   ghost: 'bg-transparent text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800',
 }
 
-const getButtonClassName = (variant: ButtonVariant, className?: string): string =>
-  `inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${variantStyles[variant]} ${className ?? ''}`
+const getButtonClassName = (variant: ButtonVariant, className?: string, square?: boolean): string =>
+  `inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${square ? 'p-2' : 'px-4 py-2'} ${variantStyles[variant]} ${className ?? ''}`
 
-const Button = ({ variant = 'primary', className, disabled, children, ...props }: ButtonProps) => {
+const Button = ({ variant = 'primary', className, disabled, square, children, ...props }: ButtonProps) => {
   return (
-    <button className={getButtonClassName(variant, className)} disabled={disabled} {...props}>
+    <button className={getButtonClassName(variant, className, square)} disabled={disabled} {...props}>
       {children}
     </button>
   )
