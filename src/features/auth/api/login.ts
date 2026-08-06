@@ -7,8 +7,8 @@ import { loginSchema } from '@/features/auth/types'
 import { verifyPassword, signSessionToken, setSessionCookie } from '@/shared/lib/auth'
 import type { User } from '@/entities/user'
 
-const MAX_FAILED_ATTEMPTS = 2
-const LOCKOUT_MS = 2 * 60 * 1000
+const MAX_FAILED_ATTEMPTS = 5
+const LOCKOUT_MS = 15 * 60 * 1000
 
 export async function login(input: unknown): Promise<{ success: true; user: User } | { success: false; error: string }> {
   try {
