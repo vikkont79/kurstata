@@ -1,2 +1,2 @@
-export { AuthModal, AUTH_MODAL_ID } from './ui/AuthModal'
+export { AuthForm, AUTH_MODAL_ID } from './ui/AuthForm'
 export { AuthControls } from './ui/AuthControls'

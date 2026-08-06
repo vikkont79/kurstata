@@ -1,15 +1,15 @@
 'use client'
 
 import { useCallback, useRef, useState } from 'react'
-import type { FormValues } from '@/features/add-day/types'
+import type { AddDayValues } from '@/features/add-day/types'
 
 const DRAFT_KEY_PREFIX = 'kurstata:day-draft:'
 const SAVE_DEBOUNCE_MS = 500
 
-const loadDraft = (key: string): FormValues | null => {
+const loadDraft = (key: string): AddDayValues | null => {
   try {
     const raw = localStorage.getItem(key)
-    return raw ? (JSON.parse(raw) as FormValues) : null
+    return raw ? (JSON.parse(raw) as AddDayValues) : null
   } catch {
     return null
   }
@@ -17,8 +17,8 @@ const loadDraft = (key: string): FormValues | null => {
 
 const useDayDraft = (identity: string) => {
   const key = `${DRAFT_KEY_PREFIX}${identity}`
-  const [draft] = useState<FormValues | null>(() => loadDraft(key))
-  const pendingRef = useRef<FormValues | null>(null)
+  const [draft] = useState<AddDayValues | null>(() => loadDraft(key))
+  const pendingRef = useRef<AddDayValues | null>(null)
   const timerRef = useRef<number | null>(null)
 
   const flush = useCallback(() => {
@@ -32,7 +32,7 @@ const useDayDraft = (identity: string) => {
     }
   }, [key])
 
-  const scheduleSave = useCallback((data: FormValues) => {
+  const scheduleSave = useCallback((data: AddDayValues) => {
     pendingRef.current = data
     if (timerRef.current !== null) {
       clearTimeout(timerRef.current)

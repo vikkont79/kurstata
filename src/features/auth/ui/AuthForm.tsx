@@ -3,36 +3,37 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useRouter } from 'next/navigation'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { Button } from '@/shared/ui/button/Button'
 import { Input } from '@/shared/ui/input/Input'
 import { Label } from '@/shared/ui/label/Label'
-import { loginSchema, registerSchema } from '@/features/auth/types'
+import { Modal } from '@/shared/ui/modal/Modal'
+import { loginSchema, registerSchema, type RegisterValues } from '@/features/auth/types'
 import { login } from '@/features/auth/api/login'
 import { register } from '@/features/auth/api/register'
 
 type Mode = 'login' | 'register'
 
-type FormValues = {
-  name: string
-  email: string
-  password: string
-}
+const AUTH_MODAL_ID = 'auth-modal'
 
-const AuthForm = ({ modalId }: { modalId: string }) => {
+const AuthForm = ({ returnTo }: { returnTo?: string }) => {
   const router = useRouter()
   const [mode, setMode] = useState<Mode>('login')
   const [serverError, setServerError] = useState<string | null>(null)
 
   const isLogin = mode === 'login'
 
+  const safeReturnTo =
+    returnTo && returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : null
+
   const {
     register: registerField,
     handleSubmit,
-    setError,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<FormValues>({
+  } = useForm<RegisterValues>({
+    resolver: zodResolver((isLogin ? loginSchema : registerSchema) as typeof registerSchema),
     defaultValues: { name: '', email: '', password: '' },
   })
 
@@ -43,27 +44,16 @@ const AuthForm = ({ modalId }: { modalId: string }) => {
   }
 
   const closeModal = () => {
-    const dialog = document.getElementById(modalId)
+    const dialog = document.getElementById(AUTH_MODAL_ID)
     if (dialog instanceof HTMLDialogElement) {
       dialog.close()
     }
   }
 
-  const onSubmit = async (data: FormValues) => {
+  const onSubmit = async (data: RegisterValues) => {
     setServerError(null)
 
-    const parsed = (isLogin ? loginSchema : registerSchema).safeParse(data)
-    if (!parsed.success) {
-      parsed.error.issues.forEach((issue) => {
-        const field = issue.path[0]
-        if (typeof field === 'string') {
-          setError(field as keyof FormValues, { message: issue.message })
-        }
-      })
-      return
-    }
-
-    const result = isLogin ? await login(parsed.data) : await register(parsed.data)
+    const result = isLogin ? await login(data) : await register(data)
 
     if (!result.success) {
       setServerError(result.error)
@@ -73,75 +63,96 @@ const AuthForm = ({ modalId }: { modalId: string }) => {
 
     toast.success(isLogin ? 'Добро пожаловать' : 'Регистрация завершена')
     closeModal()
-    router.refresh()
+    if (safeReturnTo) {
+      router.replace(safeReturnTo)
+    } else {
+      router.refresh()
+    }
   }
 
   return (
-    <form noValidate onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-      {!isLogin && (
-        <Label error={errors.name?.message}>
-          Имя
-          <Input hasError={!!errors.name} {...registerField('name')} />
-        </Label>
-      )}
+    <Modal id={AUTH_MODAL_ID} labelledBy={`${AUTH_MODAL_ID}-title`} className="relative">
+      <h3 id={`${AUTH_MODAL_ID}-title`} className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+        Авторизация
+      </h3>
 
-      <Label error={errors.email?.message}>
-        Email
-        <Input
-          type="email"
-          autoComplete="email"
-          hasError={!!errors.email}
-          {...registerField('email')}
-        />
-      </Label>
-
-      <Label error={errors.password?.message}>
-        Пароль
-        <Input
-          type="password"
-          autoComplete={isLogin ? 'current-password' : 'new-password'}
-          hasError={!!errors.password}
-          {...registerField('password')}
-        />
-      </Label>
-
-      {serverError && (
-        <p className="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
-          {serverError}
-        </p>
-      )}
-
-      <Button type="submit" disabled={isSubmitting} className="w-full">
-        {isSubmitting ? 'Подождите…' : isLogin ? 'Войти' : 'Зарегистрироваться'}
-      </Button>
-
-      <div className="flex items-center justify-center gap-1 text-sm text-zinc-600 dark:text-zinc-400">
-        {isLogin ? (
-          <>
-            Нет аккаунта?
-            <button
-              type="button"
-              className="font-medium text-zinc-900 hover:underline dark:text-zinc-100"
-              onClick={() => switchMode('register')}
-            >
-              Регистрация
-            </button>
-          </>
-        ) : (
-          <>
-            Уже есть аккаунт?
-            <button
-              type="button"
-              className="font-medium text-zinc-900 hover:underline dark:text-zinc-100"
-              onClick={() => switchMode('login')}
-            >
-              Войти
-            </button>
-          </>
+      <form noValidate onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+        {!isLogin && (
+          <Label error={errors.name?.message}>
+            Имя
+            <Input hasError={!!errors.name} {...registerField('name')} />
+          </Label>
         )}
-      </div>
-    </form>
+
+        <Label error={errors.email?.message}>
+          Email
+          <Input
+            type="email"
+            autoComplete="email"
+            hasError={!!errors.email}
+            {...registerField('email')}
+          />
+        </Label>
+
+        <Label error={errors.password?.message}>
+          Пароль
+          <Input
+            type="password"
+            autoComplete={isLogin ? 'current-password' : 'new-password'}
+            hasError={!!errors.password}
+            {...registerField('password')}
+          />
+        </Label>
+
+        {serverError && (
+          <p className="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
+            {serverError}
+          </p>
+        )}
+
+        <Button type="submit" disabled={isSubmitting} className="w-full">
+          {isSubmitting ? 'Подождите…' : isLogin ? 'Войти' : 'Зарегистрироваться'}
+        </Button>
+
+        <div className="flex items-center justify-center gap-1 text-sm text-zinc-600 dark:text-zinc-400">
+          {isLogin ? (
+            <>
+              Нет аккаунта?
+              <button
+                type="button"
+                className="font-medium text-zinc-900 hover:underline dark:text-zinc-100"
+                onClick={() => switchMode('register')}
+              >
+                Регистрация
+              </button>
+            </>
+          ) : (
+            <>
+              Уже есть аккаунт?
+              <button
+                type="button"
+                className="font-medium text-zinc-900 hover:underline dark:text-zinc-100"
+                onClick={() => switchMode('login')}
+              >
+                Войти
+              </button>
+            </>
+          )}
+        </div>
+      </form>
+
+      <Button
+        variant="ghost"
+        square
+        aria-label="Закрыть"
+        commandfor={AUTH_MODAL_ID}
+        command="close"
+        className="absolute right-0 top-0"
+      >
+        ✕
+      </Button>
+    </Modal>
   )
 }
 
-export { AuthForm }
+export { AuthForm, AUTH_MODAL_ID }

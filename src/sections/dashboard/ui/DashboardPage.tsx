@@ -3,7 +3,7 @@ import { getCurrentUser } from '@/shared/api/getCurrentUser'
 import { Header } from '@/widgets/header'
 import { WeekList } from '@/sections/dashboard/ui/WeekList'
 
-const DashboardPage = async ({ openAuthOnMount }: { openAuthOnMount?: boolean }) => {
+const DashboardPage = async ({ openAuthOnMount, returnTo }: { openAuthOnMount?: boolean; returnTo?: string }) => {
   const user = await getCurrentUser()
   const weeks = user ? await getDashboardData(user.id) : []
 
@@ -15,6 +15,7 @@ const DashboardPage = async ({ openAuthOnMount }: { openAuthOnMount?: boolean })
         className="w-full max-w-4xl mx-auto px-4 pt-10"
         user={user}
         openAuthOnMount={openAuthOnMount}
+        returnTo={returnTo}
       />
       <main className="flex flex-1 flex-col w-full max-w-4xl mx-auto px-4 pt-6 pb-10 gap-6">
         <WeekList weeks={weeks} />

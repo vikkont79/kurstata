@@ -7,6 +7,9 @@ import { loginSchema } from '@/features/auth/types'
 import { verifyPassword, signSessionToken, setSessionCookie } from '@/shared/lib/auth'
 import type { User } from '@/entities/user'
 
+const MAX_FAILED_ATTEMPTS = 2
+const LOCKOUT_MS = 2 * 60 * 1000
+
 export async function login(input: unknown): Promise<{ success: true; user: User } | { success: false; error: string }> {
   try {
     const parsed = loginSchema.safeParse(input)
@@ -17,7 +20,14 @@ export async function login(input: unknown): Promise<{ success: true; user: User
     const { email, password } = parsed.data
 
     const [found] = await db
-      .select({ id: users.id, name: users.name, email: users.email, passwordHash: users.passwordHash })
+      .select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        passwordHash: users.passwordHash,
+        failedLoginAttempts: users.failedLoginAttempts,
+        lockedUntil: users.lockedUntil,
+      })
       .from(users)
       .where(eq(users.email, email))
 
@@ -25,10 +35,28 @@ export async function login(input: unknown): Promise<{ success: true; user: User
       return { success: false, error: 'Неверный email или пароль' }
     }
 
+    if (found.lockedUntil && new Date(found.lockedUntil).getTime() > Date.now()) {
+      return { success: false, error: 'Слишком много неудачных попыток. Попробуйте позже' }
+    }
+
     const isValid = await verifyPassword(password, found.passwordHash)
     if (!isValid) {
+      const nextAttempts = (found.failedLoginAttempts ?? 0) + 1
+      const shouldLock = nextAttempts >= MAX_FAILED_ATTEMPTS
+      await db
+        .update(users)
+        .set({
+          failedLoginAttempts: nextAttempts,
+          lockedUntil: shouldLock ? new Date(Date.now() + LOCKOUT_MS).toISOString() : null,
+        })
+        .where(eq(users.id, found.id))
       return { success: false, error: 'Неверный email или пароль' }
     }
+
+    await db
+      .update(users)
+      .set({ failedLoginAttempts: 0, lockedUntil: null })
+      .where(eq(users.id, found.id))
 
     const token = signSessionToken({ userId: found.id, email: found.email })
     await setSessionCookie(token)

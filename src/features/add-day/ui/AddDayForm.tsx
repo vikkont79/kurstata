@@ -9,16 +9,16 @@ import { Button } from '@/shared/ui/button/Button'
 import { Input } from '@/shared/ui/input/Input'
 import { Label } from '@/shared/ui/label/Label'
 import { ConfirmModal } from '@/shared/ui/confirm-modal/ConfirmModal'
-import { formSchema, type FormValues } from '@/features/add-day/types'
+import { addDaySchema, type AddDayValues } from '@/features/add-day/types'
 import { saveDay } from '@/features/add-day/api/saveDay'
 import { useDayDraft } from '@/features/add-day/lib'
 import type { DayWithShifts } from '@/entities/day/types'
 
-const resolver = zodResolver(formSchema)
+const resolver = zodResolver(addDaySchema)
 
 const today = () => new Date().toISOString().split('T')[0]
 
-const getDefaultValues = (initialData: DayWithShifts | undefined): FormValues => {
+const getDefaultValues = (initialData: DayWithShifts | undefined): AddDayValues => {
   if (initialData) {
     return {
       date: initialData.date,
@@ -48,7 +48,7 @@ const AddDayForm = ({ initialData }: { initialData?: DayWithShifts }) => {
     getValues,
     control,
     formState: { errors, isSubmitting },
-  } = useForm<FormValues>({
+  } = useForm<AddDayValues>({
     resolver,
     defaultValues: getDefaultValues(initialData),
   })
@@ -83,7 +83,7 @@ const AddDayForm = ({ initialData }: { initialData?: DayWithShifts }) => {
     clearDraft()
   }
 
-  const onSubmit = async (data: FormValues) => {
+  const onSubmit = async (data: AddDayValues) => {
     setServerError(null)
     const payload = isEditing ? { ...data, date: getDefaultValues(initialData).date } : data
 

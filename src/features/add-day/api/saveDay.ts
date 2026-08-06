@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { db } from '@db/client'
 import { days, shifts } from '@db/schema'
 import { eq, sql } from 'drizzle-orm'
-import { formSchema } from '@/features/add-day/types'
+import { addDaySchema } from '@/features/add-day/types'
 import { getCurrentUser } from '@/shared/api/getCurrentUser'
 
 export async function saveDay(input: unknown): Promise<{ success: true } | { success: false; error: string }> {
@@ -14,7 +14,7 @@ export async function saveDay(input: unknown): Promise<{ success: true } | { suc
       return { success: false, error: 'Необходимо авторизоваться' }
     }
 
-    const parsed = formSchema.safeParse(input)
+    const parsed = addDaySchema.safeParse(input)
     if (!parsed.success) {
       return { success: false, error: parsed.error.issues[0]?.message ?? 'Ошибка валидации' }
     }

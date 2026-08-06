@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Button } from '@/shared/ui/button/Button'
 import { ConfirmModal } from '@/shared/ui/confirm-modal/ConfirmModal'
-import { AuthModal, AUTH_MODAL_ID } from '@/features/auth'
+import { AuthForm, AUTH_MODAL_ID } from '@/features/auth'
 import { logout } from '@/features/auth/api/logout'
 
 const LOGOUT_CONFIRM_ID = 'logout-confirm-modal'
@@ -13,9 +13,10 @@ const LOGOUT_CONFIRM_ID = 'logout-confirm-modal'
 interface AuthControlsProps {
   userName?: string
   openAuthOnMount?: boolean
+  returnTo?: string
 }
 
-const AuthControls = ({ userName, openAuthOnMount }: AuthControlsProps) => {
+const AuthControls = ({ userName, openAuthOnMount, returnTo }: AuthControlsProps) => {
   const router = useRouter()
 
   useEffect(() => {
@@ -63,7 +64,7 @@ const AuthControls = ({ userName, openAuthOnMount }: AuthControlsProps) => {
           🔑
         </Button>
       )}
-      <AuthModal />
+      <AuthForm returnTo={returnTo} />
       <ConfirmModal
         id={LOGOUT_CONFIRM_ID}
         title="Выйти из аккаунта?"

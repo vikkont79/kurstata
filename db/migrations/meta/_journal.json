@@ -36,6 +36,13 @@
       "when": 1785929165004,
       "tag": "0004_lucky_mockingbird",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1785997922294,
+      "tag": "0005_lumpy_nighthawk",
+      "breakpoints": true
     }
   ]
 }
