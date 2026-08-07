@@ -6,10 +6,6 @@ import { users } from '@db/schema'
 import { getSessionToken, verifySessionToken } from '@/shared/lib/auth'
 
 export const getCurrentUser = cache(async () => {
-  if (process.env.NEXT_PHASE === 'phase-production-build') {
-    return null
-  }
-
   const token = await getSessionToken()
   if (!token) return null
 
@@ -18,7 +14,7 @@ export const getCurrentUser = cache(async () => {
 
   try {
     const [user] = await db
-      .select({ id: users.id, name: users.name, email: users.email, createdAt: users.createdAt })
+      .select({ id: users.id, name: users.name, email: users.email })
       .from(users)
       .where(eq(users.id, payload.userId))
 

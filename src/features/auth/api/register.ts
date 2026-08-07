@@ -31,7 +31,7 @@ export async function register(input: unknown): Promise<{ success: true; user: U
       .values({ name, email, passwordHash })
       .returning({ id: users.id, name: users.name, email: users.email })
 
-    const token = signSessionToken({ userId: created.id, email: created.email })
+    const token = signSessionToken({ userId: created.id })
     await setSessionCookie(token)
 
     return { success: true, user: created }

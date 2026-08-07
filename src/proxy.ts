@@ -8,7 +8,7 @@ export function proxy(request: NextRequest) {
     const url = new URL(request.url)
     url.pathname = '/'
     url.searchParams.set('auth', 'open')
-    url.searchParams.set('from', request.nextUrl.pathname)
+    url.searchParams.set('from', request.nextUrl.pathname + request.nextUrl.search)
     return NextResponse.redirect(url)
   }
   return NextResponse.next()
