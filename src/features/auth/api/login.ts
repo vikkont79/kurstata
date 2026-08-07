@@ -64,9 +64,6 @@ export async function login(input: unknown): Promise<{ success: true; user: User
     return { success: true, user: { id: found.id, name: found.name, email: found.email } }
   } catch (err) {
     console.error('login: ошибка входа', err)
-    if (err instanceof Error) {
-      return { success: false, error: err.message }
-    }
-    return { success: false, error: 'Неизвестная ошибка' }
+    return { success: false, error: 'Не удалось выполнить вход. Попробуйте позже' }
   }
 }

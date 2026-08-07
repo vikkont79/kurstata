@@ -10,14 +10,20 @@ type HeaderProps = {
   user?: { name: string } | null
   openAuthOnMount?: boolean
   returnTo?: string
+  sessionError?: boolean
 }
 
-const Header = ({ title, link, className, user, openAuthOnMount, returnTo }: HeaderProps) => {
+const Header = ({ title, link, className, user, openAuthOnMount, returnTo, sessionError }: HeaderProps) => {
   return (
     <header className={`flex flex-col gap-3 md:flex-row md:items-center md:justify-between ${className ?? ''}`}>
       <div className="flex items-center justify-end gap-2 md:order-1">
         <ThemeToggle />
-        <AuthControls userName={user?.name} openAuthOnMount={openAuthOnMount} returnTo={returnTo} />
+        <AuthControls
+          userName={user?.name}
+          openAuthOnMount={openAuthOnMount}
+          returnTo={returnTo}
+          sessionError={sessionError}
+        />
       </div>
       <div className="flex items-center justify-between gap-3 md:flex-1">
         <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">{title}</h1>

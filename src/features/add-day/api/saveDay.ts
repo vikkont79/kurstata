@@ -48,9 +48,6 @@ export async function saveDay(input: unknown): Promise<{ success: true } | { suc
     return { success: true }
   } catch (err) {
     console.error('saveDay: ошибка сохранения дня', err)
-    if (err instanceof Error) {
-      return { success: false, error: err.message }
-    }
-    return { success: false, error: 'Неизвестная ошибка' }
+    return { success: false, error: 'Не удалось сохранить данные. Попробуйте позже' }
   }
 }

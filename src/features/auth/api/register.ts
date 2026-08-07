@@ -37,9 +37,6 @@ export async function register(input: unknown): Promise<{ success: true; user: U
     return { success: true, user: created }
   } catch (err) {
     console.error('register: ошибка регистрации', err)
-    if (err instanceof Error) {
-      return { success: false, error: err.message }
-    }
-    return { success: false, error: 'Неизвестная ошибка' }
+    return { success: false, error: 'Не удалось создать аккаунт. Попробуйте позже' }
   }
 }

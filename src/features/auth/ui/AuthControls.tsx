@@ -14,9 +14,10 @@ interface AuthControlsProps {
   userName?: string
   openAuthOnMount?: boolean
   returnTo?: string
+  sessionError?: boolean
 }
 
-const AuthControls = ({ userName, openAuthOnMount, returnTo }: AuthControlsProps) => {
+const AuthControls = ({ userName, openAuthOnMount, returnTo, sessionError }: AuthControlsProps) => {
   const router = useRouter()
 
   useEffect(() => {
@@ -29,6 +30,12 @@ const AuthControls = ({ userName, openAuthOnMount, returnTo }: AuthControlsProps
     }
     router.replace(window.location.pathname, { scroll: false })
   }, [openAuthOnMount, userName, router])
+
+  useEffect(() => {
+    if (sessionError) {
+      toast.error('Не удалось загрузить профиль')
+    }
+  }, [sessionError])
 
   const handleLogout = async () => {
     const result = await logout()
