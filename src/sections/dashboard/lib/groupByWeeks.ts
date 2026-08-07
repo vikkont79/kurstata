@@ -1,35 +1,15 @@
 import type { WeekSummary, DaySummary } from '@/sections/dashboard/types'
-
-const DAY_NAMES = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
-const MONTH_GENITIVE = [
-  'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
-  'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря',
-]
+import { formatDayLabel, formatWeekRange, round1 } from '@/sections/dashboard/lib/format'
 
 function getWeekStart(dateStr: string): string {
   const d = new Date(dateStr + 'T00:00:00')
   const day = d.getDay()
   const diff = d.getDate() - day + (day === 0 ? -6 : 1)
   d.setDate(diff)
-  return d.toISOString().split('T')[0]
-}
-
-function formatDayLabel(dateStr: string): string {
-  const d = new Date(dateStr + 'T00:00:00')
-  return `${DAY_NAMES[d.getDay()]} ${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}`
-}
-
-function formatWeekLabel(weekStart: string): string {
-  const d = new Date(weekStart + 'T00:00:00')
-  return `Неделя с ${d.getDate()} ${MONTH_GENITIVE[d.getMonth()]} ${d.getFullYear()}`
-}
-
-function round1(v: number): number {
-  return Math.round(v * 10) / 10
-}
-
-function round2(v: number): number {
-  return Math.round(v * 100) / 100
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${dd}`
 }
 
 export function groupIntoWeeks(
@@ -51,29 +31,24 @@ export function groupIntoWeeks(
     const weekTotalOrders = weekRows.reduce((s, r) => s + r.orders, 0)
     const weekTotalSum = weekRows.reduce((s, r) => s + r.total, 0)
 
-    const days: DaySummary[] = weekRows.map(r => {
-      const hours = round1(r.hours)
-      const orders = r.orders
-      return {
-        date: r.date,
-        label: formatDayLabel(r.date),
-        hours,
-        orders,
-        ordersPerHour: hours > 0 ? round1(orders / hours) : 0,
-        total: round2(r.total),
-        totalPerOrder: orders > 0 ? round2(r.total / orders) : 0,
-      }
-    })
+    const days: DaySummary[] = weekRows.map(r => ({
+      date: r.date,
+      label: formatDayLabel(r.date),
+      hours: round1(r.hours),
+      orders: r.orders,
+      total: r.total,
+    }))
 
     result.push({
       weekStart,
-      label: formatWeekLabel(weekStart),
+      label: formatWeekRange(weekStart),
       days,
       hours: round1(weekTotalHours),
       orders: weekTotalOrders,
       ordersPerHour: weekTotalHours > 0 ? round1(weekTotalOrders / weekTotalHours) : 0,
-      total: round2(weekTotalSum),
-      totalPerOrder: weekTotalOrders > 0 ? round2(weekTotalSum / weekTotalOrders) : 0,
+      totalPerHour: weekTotalHours > 0 ? weekTotalSum / weekTotalHours : 0,
+      total: weekTotalSum,
+      totalPerOrder: weekTotalOrders > 0 ? weekTotalSum / weekTotalOrders : 0,
     })
   }
 
