@@ -3,9 +3,7 @@ export type DaySummary = {
   label: string
   hours: number
   orders: number
-  ordersPerHour: number
   total: number
-  totalPerOrder: number
 }
 
 export type WeekSummary = {
@@ -15,6 +13,7 @@ export type WeekSummary = {
   hours: number
   orders: number
   ordersPerHour: number
+  totalPerHour: number
   total: number
   totalPerOrder: number
 }
