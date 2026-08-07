@@ -2,12 +2,13 @@ import Link from 'next/link'
 import { getButtonClassName } from '@/shared/ui/button/Button'
 import { ThemeToggle } from '@/widgets/header/ui/ThemeToggle'
 import { AuthControls } from '@/features/auth'
+import type { User } from '@/entities/user'
 
 type HeaderProps = {
   title: string
   link: { href: string; label: string }
   className?: string
-  user?: { name: string } | null
+  user?: User | null
   openAuthOnMount?: boolean
   returnTo?: string
   sessionError?: boolean

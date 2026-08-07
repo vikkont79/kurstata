@@ -6,7 +6,6 @@ export const AUTH_COOKIE_NAME = 'token'
 
 export type SessionPayload = {
   userId: string
-  email: string
 }
 
 export function signSessionToken(payload: SessionPayload): string {

@@ -58,7 +58,7 @@ export async function login(input: unknown): Promise<{ success: true; user: User
       .set({ failedLoginAttempts: 0, lockedUntil: null })
       .where(eq(users.id, found.id))
 
-    const token = signSessionToken({ userId: found.id, email: found.email })
+    const token = signSessionToken({ userId: found.id })
     await setSessionCookie(token)
 
     return { success: true, user: { id: found.id, name: found.name, email: found.email } }
