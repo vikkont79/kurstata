@@ -38,12 +38,16 @@ const AuthControls = ({ userName, openAuthOnMount, returnTo, sessionError }: Aut
   }, [sessionError])
 
   const handleLogout = async () => {
-    const result = await logout()
-    if (!result.success) {
+    try {
+      const result = await logout()
+      if (!result.success) {
+        toast.error('Не удалось выйти')
+        return
+      }
+      router.refresh()
+    } catch {
       toast.error('Не удалось выйти')
-      return
     }
-    router.refresh()
   }
 
   return (

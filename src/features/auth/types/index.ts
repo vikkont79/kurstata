@@ -1,14 +1,20 @@
 import { z } from 'zod'
 
+const MAX_PASSWORD_BYTES = 72
+const PASSWORD_TOO_LONG = 'Пароль слишком длинный'
+
+const passwordMaxBytes = (password: string): boolean =>
+  new TextEncoder().encode(password).length <= MAX_PASSWORD_BYTES
+
 export const loginSchema = z.object({
   email: z.string().trim().min(1, 'Введите email').pipe(z.email('Некорректный email')),
-  password: z.string().min(1, 'Введите пароль'),
+  password: z.string().min(1, 'Введите пароль').refine(passwordMaxBytes, PASSWORD_TOO_LONG),
 })
 
 export const registerSchema = z.object({
   name: z.string().trim().min(2, 'Имя минимум 2 символа'),
   email: z.string().trim().min(1, 'Введите email').pipe(z.email('Некорректный email')),
-  password: z.string().min(6, 'Пароль минимум 6 символов'),
+  password: z.string().min(6, 'Пароль минимум 6 символов').refine(passwordMaxBytes, PASSWORD_TOO_LONG),
 })
 
 export type LoginValues = z.infer<typeof loginSchema>
