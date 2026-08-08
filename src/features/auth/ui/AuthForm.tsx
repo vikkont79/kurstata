@@ -53,20 +53,25 @@ const AuthForm = ({ returnTo }: { returnTo?: string }) => {
   const onSubmit = async (data: RegisterValues) => {
     setServerError(null)
 
-    const result = isLogin ? await login(data) : await register(data)
+    try {
+      const result = isLogin ? await login(data) : await register(data)
 
-    if (!result.success) {
-      setServerError(result.error)
+      if (!result.success) {
+        setServerError(result.error)
+        toast.error(isLogin ? 'Ошибка входа' : 'Ошибка регистрации')
+        return
+      }
+
+      toast.success(isLogin ? 'Добро пожаловать' : 'Регистрация завершена')
+      closeModal()
+      if (safeReturnTo) {
+        router.replace(safeReturnTo)
+      } else {
+        router.refresh()
+      }
+    } catch {
+      setServerError('Не удалось связаться с сервером. Попробуйте позже')
       toast.error(isLogin ? 'Ошибка входа' : 'Ошибка регистрации')
-      return
-    }
-
-    toast.success(isLogin ? 'Добро пожаловать' : 'Регистрация завершена')
-    closeModal()
-    if (safeReturnTo) {
-      router.replace(safeReturnTo)
-    } else {
-      router.refresh()
     }
   }
 

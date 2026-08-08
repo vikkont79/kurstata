@@ -1,36 +1,78 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Kurstata
 
-## Getting Started
+Учёт рабочих смен: ввод данных по дням (смены, часы, заказы, выручка) и сводка по неделям.
 
-First, run the development server:
+## Стек
+
+- [Next.js](https://nextjs.org) 16 (App Router) + React 19
+- TypeScript (strict)
+- Tailwind CSS 4
+- [Drizzle ORM](https://orm.drizzle.team) + [Turso](https://turso.tech) (libSQL)
+- React Hook Form + Zod
+- Аутентификация: bcrypt + JWT в httpOnly-cookie
+
+## Требования
+
+- Node.js 22+
+- pnpm
+
+## Установка
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Создать `.env` по образцу `.env.example` и заполнить переменные.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Переменные окружения
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Переменная | Описание |
+|---|---|
+| `TURSO_DATABASE_URL` | URL базы Turso (`libsql://...`) |
+| `TURSO_AUTH_TOKEN` | Токен доступа Turso |
+| `JWT_SECRET` | Секрет подписи JWT-сессий, минимум 32 символа. Сгенерировать: `openssl rand -base64 32` |
 
-## Learn More
+Конфигурация окружения валидируется при старте (`src/shared/lib/env.ts`) — при ошибке приложение падает с понятным сообщением.
 
-To learn more about Next.js, take a look at the following resources:
+## Команды
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+pnpm dev          # dev-сервер
+pnpm build        # production-сборка
+pnpm start        # запуск production-сборки
+pnpm lint         # ESLint
+pnpm tsc --noEmit # проверка типов
+pnpm db:generate  # генерация миграции из изменений schema
+pnpm db:migrate   # применение миграций
+pnpm db:studio    # Drizzle Studio
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## База данных
 
-## Deploy on Vercel
+Схема: `db/schema.ts`, клиент: `db/client.ts`, миграции: `db/migrations/`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+При изменении схемы:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+pnpm db:generate
+pnpm db:migrate
+```
+
+## Структура проекта
+
+Feature-Sliced Design:
+
+- `src/app/` — роутинг Next.js (layout, page)
+- `src/sections/` — сборка страниц
+- `src/widgets/` — крупные блоки (шапка)
+- `src/features/` — пользовательские сценарии (авторизация, ввод дня)
+- `src/entities/` — бизнес-сущности (пользователь, день)
+- `src/shared/` — переиспользуемое (UI, API, утилиты)
+
+## Авторизация
+
+Email + пароль. Регистрация и вход — через server actions. Сессия — JWT (7 дней) в httpOnly-cookie; logout очищает cookie. Защита от подбора: блокировка аккаунта после 5 неудачных попыток на 15 минут.
+
+## Деплой
+
+Сборка и деплой — Vercel, автоматически при пуше в ветку. Переменные окружения задаются в настройках проекта Vercel.
