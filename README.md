@@ -31,6 +31,7 @@ pnpm install
 | `TURSO_DATABASE_URL` | URL базы Turso (`libsql://...`) |
 | `TURSO_AUTH_TOKEN` | Токен доступа Turso |
 | `JWT_SECRET` | Секрет подписи JWT-сессий, минимум 32 символа. Сгенерировать: `openssl rand -base64 32` |
+| `RESEND_API_KEY` | Ключ API Resend (опционально). Без него письма печатаются в консоль вместо отправки |
 
 Конфигурация окружения валидируется при старте (`src/shared/lib/env.ts`) — при ошибке приложение падает с понятным сообщением.
 

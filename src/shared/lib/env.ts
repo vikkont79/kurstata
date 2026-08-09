@@ -6,6 +6,7 @@ const envSchema = z.object({
   TURSO_AUTH_TOKEN: z.string().min(1, 'TURSO_AUTH_TOKEN не задан'),
   JWT_SECRET: z.string().min(32, 'JWT_SECRET слишком короткий (минимум 32 символа)'),
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  RESEND_API_KEY: z.string().min(1).optional(),
 })
 
 const parsed = envSchema.safeParse(process.env)
