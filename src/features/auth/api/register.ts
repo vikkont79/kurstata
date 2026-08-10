@@ -29,9 +29,9 @@ export async function register(input: unknown): Promise<{ success: true; user: U
     const [created] = await db
       .insert(users)
       .values({ name, email, passwordHash })
-      .returning({ id: users.id, name: users.name, email: users.email })
+      .returning({ id: users.id, name: users.name, email: users.email, tokenVersion: users.tokenVersion })
 
-    const token = signSessionToken({ userId: created.id })
+    const token = signSessionToken({ userId: created.id, tokenVersion: created.tokenVersion })
     await setSessionCookie(token)
 
     return { success: true, user: created }

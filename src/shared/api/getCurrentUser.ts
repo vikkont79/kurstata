@@ -14,11 +14,17 @@ export const getCurrentUser = cache(async () => {
 
   try {
     const [user] = await db
-      .select({ id: users.id, name: users.name, email: users.email })
+      .select({ id: users.id, name: users.name, email: users.email, tokenVersion: users.tokenVersion })
       .from(users)
       .where(eq(users.id, payload.userId))
 
-    return user ?? null
+    if (!user) return null
+
+    if (user.tokenVersion !== payload.tokenVersion) {
+      return null
+    }
+
+    return { id: user.id, name: user.name, email: user.email }
   } catch (error) {
     console.error('getCurrentUser: ошибка загрузки пользователя', error)
     throw new Error('Ошибка загрузки авторизованного пользователя')

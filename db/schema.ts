@@ -8,6 +8,7 @@ export const users = sqliteTable('users', {
   passwordHash: text('password_hash').notNull(),
   failedLoginAttempts: integer('failed_login_attempts').notNull().default(0),
   lockedUntil: text('locked_until'),
+  tokenVersion: integer('token_version').notNull().default(0),
   createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
 })
 

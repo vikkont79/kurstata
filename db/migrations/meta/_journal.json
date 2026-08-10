@@ -43,6 +43,13 @@
       "when": 1785997922294,
       "tag": "0005_lumpy_nighthawk",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1786305954241,
+      "tag": "0006_closed_molten_man",
+      "breakpoints": true
     }
   ]
 }

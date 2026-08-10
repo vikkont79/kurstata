@@ -53,15 +53,16 @@ export async function login(input: unknown): Promise<{ success: true; user: User
       return { success: false, error: 'Неверный email или пароль' }
     }
 
-    await db
+    const [updated] = await db
       .update(users)
       .set({ failedLoginAttempts: 0, lockedUntil: null })
       .where(eq(users.id, found.id))
+      .returning({ id: users.id, name: users.name, email: users.email, tokenVersion: users.tokenVersion })
 
-    const token = signSessionToken({ userId: found.id })
+    const token = signSessionToken({ userId: updated.id, tokenVersion: updated.tokenVersion })
     await setSessionCookie(token)
 
-    return { success: true, user: { id: found.id, name: found.name, email: found.email } }
+    return { success: true, user: { id: updated.id, name: updated.name, email: updated.email } }
   } catch (err) {
     console.error('login: ошибка входа', err)
     return { success: false, error: 'Не удалось выполнить вход. Попробуйте позже' }

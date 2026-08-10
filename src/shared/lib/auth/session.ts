@@ -7,6 +7,7 @@ export const AUTH_COOKIE_NAME = 'token'
 
 export type SessionPayload = {
   userId: string
+  tokenVersion: number
 }
 
 export function signSessionToken(payload: SessionPayload): string {
@@ -15,7 +16,11 @@ export function signSessionToken(payload: SessionPayload): string {
 
 export function verifySessionToken(token: string): SessionPayload | null {
   try {
-    return jwt.verify(token, env.JWT_SECRET) as SessionPayload
+    const payload = jwt.verify(token, env.JWT_SECRET) as Partial<SessionPayload>
+    if (typeof payload.userId !== 'string' || typeof payload.tokenVersion !== 'number') {
+      return null
+    }
+    return { userId: payload.userId, tokenVersion: payload.tokenVersion }
   } catch {
     return null
   }
