@@ -11,10 +11,11 @@ type HeaderProps = {
   user?: User | null
   openAuthOnMount?: boolean
   returnTo?: string
+  resetToken?: string
   sessionError?: boolean
 }
 
-const Header = ({ title, link, className, user, openAuthOnMount, returnTo, sessionError }: HeaderProps) => {
+const Header = ({ title, link, className, user, openAuthOnMount, returnTo, resetToken, sessionError }: HeaderProps) => {
   return (
     <header className={`flex flex-col gap-3 md:flex-row md:items-center md:justify-between ${className ?? ''}`}>
       <div className="flex items-center justify-end gap-2 md:order-1">
@@ -23,6 +24,7 @@ const Header = ({ title, link, className, user, openAuthOnMount, returnTo, sessi
           userName={user?.name}
           openAuthOnMount={openAuthOnMount}
           returnTo={returnTo}
+          resetToken={resetToken}
           sessionError={sessionError}
         />
       </div>

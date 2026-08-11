@@ -50,6 +50,13 @@
       "when": 1786305954241,
       "tag": "0006_closed_molten_man",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1786371970731,
+      "tag": "0007_numerous_susan_delgado",
+      "breakpoints": true
     }
   ]
 }

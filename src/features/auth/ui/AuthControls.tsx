@@ -7,6 +7,7 @@ import { Button } from '@/shared/ui/button/Button'
 import { ConfirmModal } from '@/shared/ui/confirm-modal/ConfirmModal'
 import { AuthForm, AUTH_MODAL_ID } from '@/features/auth'
 import { logout } from '@/features/auth/api/logout'
+import { ResetPasswordModal, RESET_PASSWORD_MODAL_ID } from '@/features/auth/ui/ResetPasswordModal'
 
 const LOGOUT_CONFIRM_ID = 'logout-confirm-modal'
 
@@ -14,10 +15,11 @@ interface AuthControlsProps {
   userName?: string
   openAuthOnMount?: boolean
   returnTo?: string
+  resetToken?: string
   sessionError?: boolean
 }
 
-const AuthControls = ({ userName, openAuthOnMount, returnTo, sessionError }: AuthControlsProps) => {
+const AuthControls = ({ userName, openAuthOnMount, returnTo, resetToken, sessionError }: AuthControlsProps) => {
   const router = useRouter()
 
   useEffect(() => {
@@ -28,14 +30,23 @@ const AuthControls = ({ userName, openAuthOnMount, returnTo, sessionError }: Aut
     if (dialog instanceof HTMLDialogElement) {
       dialog.showModal()
     }
-    router.replace(window.location.pathname, { scroll: false })
-  }, [openAuthOnMount, userName, router])
+  }, [openAuthOnMount, userName])
 
   useEffect(() => {
     if (sessionError) {
       toast.error('Не удалось загрузить профиль')
     }
   }, [sessionError])
+
+  useEffect(() => {
+    if (!resetToken || userName) {
+      return
+    }
+    const dialog = document.getElementById(RESET_PASSWORD_MODAL_ID)
+    if (dialog instanceof HTMLDialogElement) {
+      dialog.showModal()
+    }
+  }, [resetToken, userName])
 
   const handleLogout = async () => {
     try {
@@ -76,6 +87,7 @@ const AuthControls = ({ userName, openAuthOnMount, returnTo, sessionError }: Aut
         </Button>
       )}
       <AuthForm returnTo={returnTo} />
+      {resetToken && <ResetPasswordModal token={resetToken} />}
       <ConfirmModal
         id={LOGOUT_CONFIRM_ID}
         title="Выйти из аккаунта?"

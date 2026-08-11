@@ -12,6 +12,7 @@ import { Modal } from '@/shared/ui/modal/Modal'
 import { loginSchema, registerSchema, type RegisterValues } from '@/features/auth/types'
 import { login } from '@/features/auth/api/login'
 import { register } from '@/features/auth/api/register'
+import { ForgotPasswordModal, FORGOT_PASSWORD_MODAL_ID } from '@/features/auth/ui/ForgotPasswordModal'
 
 type Mode = 'login' | 'register'
 
@@ -50,6 +51,14 @@ const AuthForm = ({ returnTo }: { returnTo?: string }) => {
     }
   }
 
+  const openForgotPassword = () => {
+    closeModal()
+    const dialog = document.getElementById(FORGOT_PASSWORD_MODAL_ID)
+    if (dialog instanceof HTMLDialogElement) {
+      dialog.showModal()
+    }
+  }
+
   const onSubmit = async (data: RegisterValues) => {
     setServerError(null)
 
@@ -67,7 +76,9 @@ const AuthForm = ({ returnTo }: { returnTo?: string }) => {
       if (safeReturnTo) {
         router.replace(safeReturnTo)
       } else {
-        router.refresh()
+        const url = new URL(window.location.href)
+        url.searchParams.delete('auth')
+        router.replace(url.pathname + url.search, { scroll: false })
       }
     } catch {
       setServerError('Не удалось связаться с сервером. Попробуйте позже')
@@ -76,7 +87,8 @@ const AuthForm = ({ returnTo }: { returnTo?: string }) => {
   }
 
   return (
-    <Modal id={AUTH_MODAL_ID} labelledBy={`${AUTH_MODAL_ID}-title`} className="relative">
+    <>
+      <Modal id={AUTH_MODAL_ID} labelledBy={`${AUTH_MODAL_ID}-title`} className="relative">
       <h3 id={`${AUTH_MODAL_ID}-title`} className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
         Авторизация
       </h3>
@@ -119,6 +131,16 @@ const AuthForm = ({ returnTo }: { returnTo?: string }) => {
           {isSubmitting ? 'Подождите…' : isLogin ? 'Войти' : 'Зарегистрироваться'}
         </Button>
 
+        {isLogin && (
+          <button
+            type="button"
+            className="self-center text-sm text-zinc-600 hover:underline dark:text-zinc-400"
+            onClick={openForgotPassword}
+          >
+            Забыли пароль?
+          </button>
+        )}
+
         <div className="flex items-center justify-center gap-1 text-sm text-zinc-600 dark:text-zinc-400">
           {isLogin ? (
             <>
@@ -157,6 +179,8 @@ const AuthForm = ({ returnTo }: { returnTo?: string }) => {
         ✕
       </Button>
     </Modal>
+      <ForgotPasswordModal />
+    </>
   )
 }
 

@@ -6,7 +6,15 @@ import { ErrorState } from '@/shared/ui'
 import type { User } from '@/entities/user'
 import type { WeekSummary } from '@/sections/dashboard/types'
 
-const DashboardPage = async ({ openAuthOnMount, returnTo }: { openAuthOnMount?: boolean; returnTo?: string }) => {
+const DashboardPage = async ({
+  openAuthOnMount,
+  returnTo,
+  resetToken,
+}: {
+  openAuthOnMount?: boolean
+  returnTo?: string
+  resetToken?: string
+}) => {
   let user: User | null = null
   let sessionError = false
   try {
@@ -34,6 +42,7 @@ const DashboardPage = async ({ openAuthOnMount, returnTo }: { openAuthOnMount?: 
         user={user}
         openAuthOnMount={openAuthOnMount}
         returnTo={returnTo}
+        resetToken={resetToken}
         sessionError={sessionError}
       />
       <main className="flex flex-1 flex-col w-full max-w-4xl mx-auto px-4 pt-6 pb-10 gap-6">
