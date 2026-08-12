@@ -7,17 +7,11 @@
 /** Срок жизни JWT-сессии. */
 export const TOKEN_EXPIRES_IN = '7d'
 
-/** Имя HTTP-cookie, в которой хранится JWT-сессия. */
-export const AUTH_COOKIE_NAME = 'token'
-
 /** Срок жизни cookie сессии в секундах (7 суток). */
 export const COOKIE_MAX_AGE = 60 * 60 * 24 * 7
 
 /** Время жизни токена сброса пароля в миллисекундах. */
 export const RESET_TOKEN_TTL_MS = 30 * 60 * 1000
-
-/** Верхняя граница длины пароля в байтах (ограничение bcrypt). */
-export const MAX_PASSWORD_BYTES = 72
 
 /** Сколько неудачных попыток входа за окно блокирует аккаунт. */
 export const MAX_FAILED_ATTEMPTS = 5

@@ -1,5 +1,7 @@
 import { z } from 'zod'
-import { MAX_PASSWORD_BYTES } from '@/shared/lib/auth'
+
+// Лимит алгоритма bcrypt: пароли длиннее 72 байт молча обрезаются
+const MAX_PASSWORD_BYTES = 72
 
 const PASSWORD_TOO_LONG = 'Пароль слишком длинный'
 
