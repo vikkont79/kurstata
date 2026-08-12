@@ -1,10 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import {
-  generateResetToken,
-  hashResetToken,
-  isResetTokenExpired,
-  RESET_TOKEN_TTL_MS,
-} from './resetToken'
+import { generateResetToken, hashResetToken, isResetTokenExpired } from './resetToken'
+import { RESET_TOKEN_TTL_MS } from './constants'
 
 describe('generateResetToken', () => {
   it('возвращает 64 шестнадцатеричных символа', () => {

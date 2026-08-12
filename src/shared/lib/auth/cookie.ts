@@ -1,7 +1,5 @@
 import { cookies } from 'next/headers'
-import { AUTH_COOKIE_NAME } from './session'
-
-const COOKIE_MAX_AGE = 60 * 60 * 24 * 7
+import { AUTH_COOKIE_NAME, COOKIE_MAX_AGE } from './constants'
 
 export async function setSessionCookie(token: string) {
   const store = await cookies()

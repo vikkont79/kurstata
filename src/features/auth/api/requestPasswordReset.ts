@@ -6,7 +6,9 @@ import { db } from '@db/client'
 import { users } from '@db/schema'
 import { requestResetSchema } from '@/features/auth/types'
 import { getEmailSender } from '@/shared/lib/email'
-import { generateResetToken, hashResetToken, RESET_TOKEN_TTL_MS } from '@/shared/lib/auth'
+import { generateResetToken, hashResetToken, RESET_TOKEN_TTL_MS, RATE_LIMIT_RESET, RATE_LIMIT_RESET_WINDOW_MS } from '@/shared/lib/auth'
+import { isRateLimited, formatRateLimitMessage } from '@/shared/lib/rateLimit'
+import { getClientIp } from '@/shared/lib/getClientIp'
 
 const getAppOrigin = async (): Promise<string> => {
   const h = await headers()
@@ -26,12 +28,34 @@ export async function requestPasswordReset(
 
     const { email } = parsed.data
 
+    const clientIp = getClientIp(await headers())
+
+    if (clientIp) {
+      const rl = await isRateLimited({
+        key: clientIp,
+        limit: RATE_LIMIT_RESET,
+        windowMs: RATE_LIMIT_RESET_WINDOW_MS,
+      })
+      if (!rl.allowed) {
+        return { success: false, error: formatRateLimitMessage(rl.reset) }
+      }
+    }
+
     const [found] = await db
       .select({ id: users.id, email: users.email })
       .from(users)
       .where(eq(users.email, email))
 
     if (found) {
+      const rlEmail = await isRateLimited({
+        key: email,
+        limit: RATE_LIMIT_RESET,
+        windowMs: RATE_LIMIT_RESET_WINDOW_MS,
+      })
+      if (!rlEmail.allowed) {
+        return { success: false, error: formatRateLimitMessage(rlEmail.reset) }
+      }
+
       const token = generateResetToken()
       const expiresAt = new Date(Date.now() + RESET_TOKEN_TTL_MS).toISOString()
 

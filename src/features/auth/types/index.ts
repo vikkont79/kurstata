@@ -1,6 +1,6 @@
 import { z } from 'zod'
+import { MAX_PASSWORD_BYTES } from '@/shared/lib/auth'
 
-const MAX_PASSWORD_BYTES = 72
 const PASSWORD_TOO_LONG = 'Пароль слишком длинный'
 
 export const INVALID_LINK_MESSAGE = 'Ссылка недействительна или истекла'

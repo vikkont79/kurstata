@@ -11,6 +11,7 @@ export const users = sqliteTable('users', {
   tokenVersion: integer('token_version').notNull().default(0),
   passwordResetTokenHash: text('password_reset_token_hash'),
   passwordResetExpiresAt: text('password_reset_expires_at'),
+  lastFailedAt: text('last_failed_at'),
   createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
 })
 

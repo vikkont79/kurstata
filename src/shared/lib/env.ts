@@ -5,6 +5,8 @@ const envSchema = z.object({
   TURSO_DATABASE_URL: z.string().min(1, 'TURSO_DATABASE_URL не задан'),
   TURSO_AUTH_TOKEN: z.string().min(1, 'TURSO_AUTH_TOKEN не задан'),
   JWT_SECRET: z.string().min(32, 'JWT_SECRET слишком короткий (минимум 32 символа)'),
+  UPSTASH_REDIS_REST_URL: z.string().min(1, 'UPSTASH_REDIS_REST_URL не задан'),
+  UPSTASH_REDIS_REST_TOKEN: z.string().min(1, 'UPSTASH_REDIS_REST_TOKEN не задан'),
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   RESEND_API_KEY: z.string().min(1).optional(),
 })

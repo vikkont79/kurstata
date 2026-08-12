@@ -1,9 +1,6 @@
 import jwt from 'jsonwebtoken'
 import { env } from '@/shared/lib/env'
-
-const TOKEN_EXPIRES_IN = '7d'
-
-export const AUTH_COOKIE_NAME = 'token'
+import { TOKEN_EXPIRES_IN } from './constants'
 
 export type SessionPayload = {
   userId: string
