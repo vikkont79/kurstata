@@ -4,14 +4,20 @@
  * а не переменные окружения. Для тестирования значения меняются прямо здесь.
  */
 
+// --- Сессия (JWT + cookie) ---
+
 /** Срок жизни JWT-сессии. */
 export const TOKEN_EXPIRES_IN = '7d'
 
 /** Срок жизни cookie сессии в секундах (7 суток). */
 export const COOKIE_MAX_AGE = 60 * 60 * 24 * 7
 
+// --- Сброс пароля ---
+
 /** Время жизни токена сброса пароля в миллисекундах. */
 export const RESET_TOKEN_TTL_MS = 30 * 60 * 1000
+
+// --- Защита от подбора (вход) ---
 
 /** Сколько неудачных попыток входа за окно блокирует аккаунт. */
 export const MAX_FAILED_ATTEMPTS = 5
@@ -25,20 +31,22 @@ export const LOCKOUT_MS = 15 * 60 * 1000
  */
 export const LOGIN_FAIL_WINDOW_MS = 15 * 60 * 1000
 
+// --- Rate limiting (Upstash) ---
+
 /** Лимит неудачных попыток входа с одного IP в минуту (до блокировки аккаунта). */
 export const RATE_LIMIT_LOGIN_FAIL = 4
 
 /** Окно (в миллисекундах) для per-IP лимита попыток входа. */
 export const RATE_LIMIT_LOGIN_WINDOW_MS = 60 * 1000
 
+/** Лимит регистраций с одного IP в час. */
+export const RATE_LIMIT_REGISTER = 5
+
+/** Окно (в миллисекундах) для per-IP лимита регистраций. */
+export const RATE_LIMIT_REGISTER_WINDOW_MS = 60 * 60 * 1000
+
 /** Лимит запросов сброса пароля с одного IP/email в час. */
 export const RATE_LIMIT_RESET = 3
 
 /** Окно (в миллисекундах) для лимита запросов сброса пароля. */
 export const RATE_LIMIT_RESET_WINDOW_MS = 60 * 60 * 1000
-
-/** Окно (в миллисекундах) для per-IP лимита регистраций. */
-export const RATE_LIMIT_REGISTER_WINDOW_MS = 60 * 60 * 1000
-
-/** Лимит регистраций с одного IP в час. */
-export const RATE_LIMIT_REGISTER = 5
