@@ -29,6 +29,23 @@ export const MAX_FAILED_ATTEMPTS = 5
 /** Окно (в миллисекундах) скользящего per-IP локаута входа. */
 export const LOGIN_FAIL_WINDOW_MS = 15 * 60 * 1000
 
+// --- Подтверждение регистрации (OTP) ---
+
+/** Длина кода подтверждения. */
+export const CONFIRM_CODE_LENGTH = 6
+
+/**
+ * Время жизни pending-регистрации в Redis. Пока код не подтверждён,
+ * запись (включая bcrypt-хэш пароля) живёт здесь и исчезает по TTL.
+ */
+export const PENDING_REGISTER_TTL_MS = 15 * 60 * 1000
+
+/** Лимит попыток ввода кода подтверждения на `ip:email` за окно (анти-брутфорс OTP). */
+export const RATE_LIMIT_CONFIRM = 5
+
+/** Окно (в миллисекундах) для лимита попыток подтверждения. */
+export const RATE_LIMIT_CONFIRM_WINDOW_MS = 15 * 60 * 1000
+
 // --- Rate limiting (Upstash) ---
 
 /** Лимит регистраций с одного IP в час. */

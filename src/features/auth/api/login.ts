@@ -12,7 +12,7 @@ import {
   MAX_FAILED_ATTEMPTS,
   LOGIN_FAIL_WINDOW_MS,
 } from '@/shared/lib/auth'
-import { isRateLimited } from '@/shared/lib/rateLimit'
+import { isRateLimited } from '@/shared/lib/redis'
 import { getClientIp } from '@/shared/lib/getClientIp'
 import type { User } from '@/entities/user'
 
