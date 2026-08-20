@@ -150,7 +150,7 @@ export default function Page({ params }: { params: { id: string } }) {
 
 1. **Lint:** `pnpm lint` — без ошибок и предупреждений
 2. **Types:** `pnpm tsc --noEmit` — проект должен собираться (включает проверку типов)
-3. **Tests:** `pnpm test` — юнит-тесты (`vitest run`) должны проходить. Тесты — рядом с кодом, `*.test.ts`; покрываем чистую логику (дашборд, валидация), auth-блок тестируется в auth-треде
+3. **Tests:** `pnpm test` — юнит-тесты (`vitest run`) должны проходить. Тесты — рядом с кодом, `*.test.ts`; покрываем чистую логику (дашборд, валидация)
 4. **Tailwind:** не использовать устаревшие директивы `@tailwind` / `@apply` (Tailwind v4 использует `@import "tailwindcss"`)
 
 ---

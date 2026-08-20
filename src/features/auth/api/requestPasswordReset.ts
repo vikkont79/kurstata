@@ -7,7 +7,7 @@ import { users } from '@db/schema'
 import { requestResetSchema } from '@/features/auth/types'
 import { getEmailSender } from '@/shared/lib/email'
 import { generateResetToken, hashResetToken, RESET_TOKEN_TTL_MS, RATE_LIMIT_RESET, RATE_LIMIT_RESET_WINDOW_MS } from '@/shared/lib/auth'
-import { isRateLimited, formatRateLimitMessage } from '@/shared/lib/rateLimit'
+import { isRateLimited, formatRateLimitMessage } from '@/shared/lib/redis'
 import { getClientIp } from '@/shared/lib/getClientIp'
 
 const getAppOrigin = async (): Promise<string> => {
@@ -32,7 +32,7 @@ export async function requestPasswordReset(
 
     if (clientIp) {
       const rl = await isRateLimited({
-        key: clientIp,
+        key: `reset:${clientIp}`,
         limit: RATE_LIMIT_RESET,
         windowMs: RATE_LIMIT_RESET_WINDOW_MS,
       })
@@ -48,7 +48,7 @@ export async function requestPasswordReset(
 
     if (found) {
       const rlEmail = await isRateLimited({
-        key: email,
+        key: `reset:${email}`,
         limit: RATE_LIMIT_RESET,
         windowMs: RATE_LIMIT_RESET_WINDOW_MS,
       })

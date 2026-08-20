@@ -1,5 +1,5 @@
-import { Redis } from '@upstash/redis'
 import { Ratelimit } from '@upstash/ratelimit'
+import { redis } from './client'
 
 /**
  * Префикс для всех ключей в Redis. Разделяет счётчики по проекту,
@@ -32,7 +32,7 @@ let ratelimitWindowMs = 0
 const getRatelimit = (limit: number, windowMs: number): Ratelimit => {
   if (!ratelimit || ratelimitLimit !== limit || ratelimitWindowMs !== windowMs) {
     ratelimit = new Ratelimit({
-      redis: Redis.fromEnv(),
+      redis,
       prefix: RATELIMIT_PREFIX,
       limiter: Ratelimit.slidingWindow(limit, `${windowMs} ms`),
       ephemeralCache: false,

@@ -9,14 +9,14 @@ import {
   verifyPassword,
   signSessionToken,
   setSessionCookie,
-  LOCKOUT_MS,
-  RATE_LIMIT_LOGIN_FAIL,
-  RATE_LIMIT_LOGIN_WINDOW_MS,
+  MAX_FAILED_ATTEMPTS,
+  LOGIN_FAIL_WINDOW_MS,
 } from '@/shared/lib/auth'
-import { computeNextLockout } from '@/shared/lib/auth/lockout'
-import { isRateLimited, formatRateLimitMessage } from '@/shared/lib/rateLimit'
+import { isRateLimited } from '@/shared/lib/redis'
 import { getClientIp } from '@/shared/lib/getClientIp'
 import type { User } from '@/entities/user'
+
+const GENERIC_LOGIN_ERROR = 'Неверный email или пароль'
 
 export async function login(input: unknown): Promise<{ success: true; user: User } | { success: false; error: string }> {
   try {
@@ -33,19 +33,13 @@ export async function login(input: unknown): Promise<{ success: true; user: User
         name: users.name,
         email: users.email,
         passwordHash: users.passwordHash,
-        failedLoginAttempts: users.failedLoginAttempts,
-        lockedUntil: users.lockedUntil,
-        lastFailedAt: users.lastFailedAt,
+        tokenVersion: users.tokenVersion,
       })
       .from(users)
       .where(eq(users.email, email))
 
     if (!found) {
-      return { success: false, error: 'Неверный email или пароль' }
-    }
-
-    if (found.lockedUntil && new Date(found.lockedUntil).getTime() > Date.now()) {
-      return { success: false, error: 'Слишком много неудачных попыток. Попробуйте позже' }
+      return { success: false, error: GENERIC_LOGIN_ERROR }
     }
 
     const isValid = await verifyPassword(password, found.passwordHash)
@@ -54,44 +48,22 @@ export async function login(input: unknown): Promise<{ success: true; user: User
       const clientIp = getClientIp(await headers())
       if (clientIp) {
         const rl = await isRateLimited({
-          key: `${clientIp}:${email}`,
-          limit: RATE_LIMIT_LOGIN_FAIL,
-          windowMs: RATE_LIMIT_LOGIN_WINDOW_MS,
+          key: `login:${clientIp}:${email}`,
+          limit: MAX_FAILED_ATTEMPTS,
+          windowMs: LOGIN_FAIL_WINDOW_MS,
         })
         if (!rl.allowed) {
-          return { success: false, error: formatRateLimitMessage(rl.reset) }
+          return { success: false, error: GENERIC_LOGIN_ERROR }
         }
       }
 
-      const now = Date.now()
-      const { nextAttempts, shouldLock } = computeNextLockout({
-        failedLoginAttempts: found.failedLoginAttempts,
-        lastFailedAt: found.lastFailedAt,
-        now,
-      })
-
-      await db
-        .update(users)
-        .set({
-          failedLoginAttempts: nextAttempts,
-          lockedUntil: shouldLock ? new Date(now + LOCKOUT_MS).toISOString() : null,
-          lastFailedAt: new Date(now).toISOString(),
-        })
-        .where(eq(users.id, found.id))
-
-      return { success: false, error: 'Неверный email или пароль' }
+      return { success: false, error: GENERIC_LOGIN_ERROR }
     }
 
-    const [updated] = await db
-      .update(users)
-      .set({ failedLoginAttempts: 0, lockedUntil: null, lastFailedAt: null })
-      .where(eq(users.id, found.id))
-      .returning({ id: users.id, name: users.name, email: users.email, tokenVersion: users.tokenVersion })
-
-    const token = signSessionToken({ userId: updated.id, tokenVersion: updated.tokenVersion })
+    const token = signSessionToken({ userId: found.id, tokenVersion: found.tokenVersion })
     await setSessionCookie(token)
 
-    return { success: true, user: { id: updated.id, name: updated.name, email: updated.email } }
+    return { success: true, user: { id: found.id, name: found.name, email: found.email } }
   } catch (err) {
     console.error('login: ошибка входа', err)
     return { success: false, error: 'Не удалось выполнить вход. Попробуйте позже' }

@@ -9,9 +9,17 @@ import { Button } from '@/shared/ui/button/Button'
 import { Input } from '@/shared/ui/input/Input'
 import { Label } from '@/shared/ui/label/Label'
 import { Modal } from '@/shared/ui/modal/Modal'
-import { loginSchema, registerSchema, type RegisterValues } from '@/features/auth/types'
+import {
+  loginSchema,
+  registerSchema,
+  confirmSchema,
+  type RegisterValues,
+  type ConfirmValues,
+} from '@/features/auth/types'
 import { login } from '@/features/auth/api/login'
 import { register } from '@/features/auth/api/register'
+import { confirmRegistration } from '@/features/auth/api/confirmRegistration'
+import { resendRegistrationCode } from '@/features/auth/api/resendRegistrationCode'
 import { ForgotPasswordModal, FORGOT_PASSWORD_MODAL_ID } from '@/features/auth/ui/ForgotPasswordModal'
 
 type Mode = 'login' | 'register'
@@ -21,27 +29,32 @@ const AUTH_MODAL_ID = 'auth-modal'
 const AuthForm = ({ returnTo }: { returnTo?: string }) => {
   const router = useRouter()
   const [mode, setMode] = useState<Mode>('login')
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null)
   const [serverError, setServerError] = useState<string | null>(null)
+  const [isResending, setIsResending] = useState(false)
 
   const isLogin = mode === 'login'
 
   const safeReturnTo =
     returnTo && returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : null
 
-  const {
-    register: registerField,
-    handleSubmit,
-    reset,
-    formState: { errors, isSubmitting },
-  } = useForm<RegisterValues>({
+  const registerForm = useForm<RegisterValues>({
     resolver: zodResolver((isLogin ? loginSchema : registerSchema) as typeof registerSchema),
     defaultValues: { name: '', email: '', password: '' },
   })
 
+  const confirmForm = useForm<ConfirmValues>({
+    resolver: zodResolver(confirmSchema),
+    defaultValues: { email: '', code: '' },
+  })
+
   const switchMode = (next: Mode) => {
     setMode(next)
+    setPendingEmail(null)
     setServerError(null)
-    reset()
+    setIsResending(false)
+    registerForm.reset()
+    confirmForm.reset({ email: '', code: '' })
   }
 
   const closeModal = () => {
@@ -59,126 +72,264 @@ const AuthForm = ({ returnTo }: { returnTo?: string }) => {
     }
   }
 
-  const onSubmit = async (data: RegisterValues) => {
+  const redirectAfterAuth = () => {
+    if (safeReturnTo) {
+      router.replace(safeReturnTo)
+    } else {
+      const url = new URL(window.location.href)
+      url.searchParams.delete('auth')
+      router.replace(url.pathname + url.search, { scroll: false })
+    }
+  }
+
+  const onSubmitRegister = async (data: RegisterValues) => {
     setServerError(null)
 
     try {
-      const result = isLogin ? await login(data) : await register(data)
-
-      if (!result.success) {
-        setServerError(result.error)
-        toast.error(isLogin ? 'Ошибка входа' : 'Ошибка регистрации')
+      if (isLogin) {
+        const result = await login(data)
+        if (!result.success) {
+          setServerError(result.error)
+          toast.error('Ошибка входа')
+          return
+        }
+        toast.success('Добро пожаловать')
+        closeModal()
+        redirectAfterAuth()
         return
       }
 
-      toast.success(isLogin ? 'Добро пожаловать' : 'Регистрация завершена')
-      closeModal()
-      if (safeReturnTo) {
-        router.replace(safeReturnTo)
-      } else {
-        const url = new URL(window.location.href)
-        url.searchParams.delete('auth')
-        router.replace(url.pathname + url.search, { scroll: false })
+      const result = await register(data)
+      if (!result.success) {
+        setServerError(result.error)
+        toast.error('Ошибка регистрации')
+        return
       }
+      setPendingEmail(result.email)
+      confirmForm.reset({ email: result.email, code: '' })
+      toast.success('Код отправлен на почту')
     } catch {
       setServerError('Не удалось связаться с сервером. Попробуйте позже')
       toast.error(isLogin ? 'Ошибка входа' : 'Ошибка регистрации')
     }
   }
 
+  const onSubmitConfirm = async (data: ConfirmValues) => {
+    setServerError(null)
+
+    try {
+      const result = await confirmRegistration(data)
+
+      if (!result.success) {
+        setServerError(result.error)
+        toast.error('Не удалось подтвердить код')
+        return
+      }
+
+      toast.success('Регистрация завершена')
+      setPendingEmail(null)
+      closeModal()
+      redirectAfterAuth()
+    } catch {
+      setServerError('Не удалось связаться с сервером. Попробуйте позже')
+      toast.error('Не удалось подтвердить код')
+    }
+  }
+
+  const handleResend = async () => {
+    if (!pendingEmail) return
+    setServerError(null)
+    setIsResending(true)
+
+    try {
+      const result = await resendRegistrationCode({ email: pendingEmail })
+
+      if (!result.success) {
+        setServerError(result.error)
+        toast.error('Не удалось отправить код')
+        return
+      }
+
+      toast.success('Новый код отправлен')
+    } catch {
+      setServerError('Не удалось связаться с сервером. Попробуйте позже')
+      toast.error('Не удалось отправить код')
+    } finally {
+      setIsResending(false)
+    }
+  }
+
   return (
     <>
       <Modal id={AUTH_MODAL_ID} labelledBy={`${AUTH_MODAL_ID}-title`} className="relative">
-      <h3 id={`${AUTH_MODAL_ID}-title`} className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-        Авторизация
-      </h3>
+        <h3 id={`${AUTH_MODAL_ID}-title`} className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+          Авторизация
+        </h3>
 
-      <form noValidate onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-        {!isLogin && (
-          <Label error={errors.name?.message}>
-            Имя
-            <Input hasError={!!errors.name} {...registerField('name')} />
-          </Label>
-        )}
-
-        <Label error={errors.email?.message}>
-          Email
-          <Input
-            type="email"
-            autoComplete="email"
-            hasError={!!errors.email}
-            {...registerField('email')}
-          />
-        </Label>
-
-        <Label error={errors.password?.message}>
-          Пароль
-          <Input
-            type="password"
-            autoComplete={isLogin ? 'current-password' : 'new-password'}
-            hasError={!!errors.password}
-            {...registerField('password')}
-          />
-        </Label>
-
-        {serverError && (
-          <p className="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
-            {serverError}
-          </p>
-        )}
-
-        <Button type="submit" disabled={isSubmitting} className="w-full">
-          {isSubmitting ? 'Подождите…' : isLogin ? 'Войти' : 'Зарегистрироваться'}
-        </Button>
-
-        {isLogin && (
-          <button
-            type="button"
-            className="self-center text-sm text-zinc-600 hover:underline dark:text-zinc-400"
-            onClick={openForgotPassword}
+        {pendingEmail ? (
+          <form
+            noValidate
+            onSubmit={confirmForm.handleSubmit(onSubmitConfirm)}
+            className="flex flex-col gap-4"
           >
-            Забыли пароль?
-          </button>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+              Мы отправили код на {pendingEmail}. Введите его для завершения регистрации. Код
+              действует 15 минут.
+            </p>
+
+            <Label error={confirmForm.formState.errors.email?.message}>
+              Email
+              <Input
+                type="email"
+                readOnly
+                hasError={!!confirmForm.formState.errors.email}
+                {...confirmForm.register('email')}
+              />
+            </Label>
+
+            <Label error={confirmForm.formState.errors.code?.message}>
+              Код
+              <Input
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                maxLength={6}
+                autoFocus
+                hasError={!!confirmForm.formState.errors.code}
+                {...confirmForm.register('code')}
+              />
+            </Label>
+
+            {serverError && (
+              <p className="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
+                {serverError}
+              </p>
+            )}
+
+            <Button
+              type="submit"
+              disabled={confirmForm.formState.isSubmitting}
+              className="w-full"
+            >
+              {confirmForm.formState.isSubmitting ? 'Подождите…' : 'Подтвердить'}
+            </Button>
+
+            <button
+              type="button"
+              disabled={isResending}
+              className="self-center text-sm text-zinc-600 hover:underline disabled:opacity-60 dark:text-zinc-400"
+              onClick={handleResend}
+            >
+              {isResending ? 'Отправляем…' : 'Отправить код повторно'}
+            </button>
+
+            <button
+              type="button"
+              className="self-center text-sm text-zinc-600 hover:underline dark:text-zinc-400"
+              onClick={() => switchMode('login')}
+            >
+              Назад ко входу
+            </button>
+          </form>
+        ) : (
+          <form
+            noValidate
+            onSubmit={registerForm.handleSubmit(onSubmitRegister)}
+            className="flex flex-col gap-4"
+          >
+            {!isLogin && (
+              <Label error={registerForm.formState.errors.name?.message}>
+                Имя
+                <Input hasError={!!registerForm.formState.errors.name} {...registerForm.register('name')} />
+              </Label>
+            )}
+
+            <Label error={registerForm.formState.errors.email?.message}>
+              Email
+              <Input
+                type="email"
+                autoComplete="email"
+                hasError={!!registerForm.formState.errors.email}
+                {...registerForm.register('email')}
+              />
+            </Label>
+
+            <Label error={registerForm.formState.errors.password?.message}>
+              Пароль
+              <Input
+                type="password"
+                autoComplete={isLogin ? 'current-password' : 'new-password'}
+                hasError={!!registerForm.formState.errors.password}
+                {...registerForm.register('password')}
+              />
+            </Label>
+
+            {serverError && (
+              <p className="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
+                {serverError}
+              </p>
+            )}
+
+            <Button
+              type="submit"
+              disabled={registerForm.formState.isSubmitting}
+              className="w-full"
+            >
+              {registerForm.formState.isSubmitting
+                ? 'Подождите…'
+                : isLogin
+                  ? 'Войти'
+                  : 'Зарегистрироваться'}
+            </Button>
+
+            {isLogin && (
+              <button
+                type="button"
+                className="self-center text-sm text-zinc-600 hover:underline dark:text-zinc-400"
+                onClick={openForgotPassword}
+              >
+                Забыли пароль?
+              </button>
+            )}
+
+            <div className="flex items-center justify-center gap-1 text-sm text-zinc-600 dark:text-zinc-400">
+              {isLogin ? (
+                <>
+                  Нет аккаунта?
+                  <button
+                    type="button"
+                    className="font-medium text-zinc-900 hover:underline dark:text-zinc-100"
+                    onClick={() => switchMode('register')}
+                  >
+                    Регистрация
+                  </button>
+                </>
+              ) : (
+                <>
+                  Уже есть аккаунт?
+                  <button
+                    type="button"
+                    className="font-medium text-zinc-900 hover:underline dark:text-zinc-100"
+                    onClick={() => switchMode('login')}
+                  >
+                    Войти
+                  </button>
+                </>
+              )}
+            </div>
+          </form>
         )}
 
-        <div className="flex items-center justify-center gap-1 text-sm text-zinc-600 dark:text-zinc-400">
-          {isLogin ? (
-            <>
-              Нет аккаунта?
-              <button
-                type="button"
-                className="font-medium text-zinc-900 hover:underline dark:text-zinc-100"
-                onClick={() => switchMode('register')}
-              >
-                Регистрация
-              </button>
-            </>
-          ) : (
-            <>
-              Уже есть аккаунт?
-              <button
-                type="button"
-                className="font-medium text-zinc-900 hover:underline dark:text-zinc-100"
-                onClick={() => switchMode('login')}
-              >
-                Войти
-              </button>
-            </>
-          )}
-        </div>
-      </form>
-
-      <Button
-        variant="ghost"
-        square
-        aria-label="Закрыть"
-        commandfor={AUTH_MODAL_ID}
-        command="close"
-        className="absolute right-0 top-0"
-      >
-        ✕
-      </Button>
-    </Modal>
+        <Button
+          variant="ghost"
+          square
+          aria-label="Закрыть"
+          commandfor={AUTH_MODAL_ID}
+          command="close"
+          className="absolute right-0 top-0"
+        >
+          ✕
+        </Button>
+      </Modal>
       <ForgotPasswordModal />
     </>
   )
