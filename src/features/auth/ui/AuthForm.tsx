@@ -127,6 +127,7 @@ const AuthForm = ({ returnTo }: { returnTo?: string }) => {
       }
 
       toast.success('Регистрация завершена')
+      setPendingEmail(null)
       closeModal()
       redirectAfterAuth()
     } catch {
@@ -191,6 +192,8 @@ const AuthForm = ({ returnTo }: { returnTo?: string }) => {
               <Input
                 inputMode="numeric"
                 autoComplete="one-time-code"
+                maxLength={6}
+                autoFocus
                 hasError={!!confirmForm.formState.errors.code}
                 {...confirmForm.register('code')}
               />

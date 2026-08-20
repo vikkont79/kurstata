@@ -32,7 +32,7 @@ export async function requestPasswordReset(
 
     if (clientIp) {
       const rl = await isRateLimited({
-        key: clientIp,
+        key: `reset:${clientIp}`,
         limit: RATE_LIMIT_RESET,
         windowMs: RATE_LIMIT_RESET_WINDOW_MS,
       })
@@ -48,7 +48,7 @@ export async function requestPasswordReset(
 
     if (found) {
       const rlEmail = await isRateLimited({
-        key: email,
+        key: `reset:${email}`,
         limit: RATE_LIMIT_RESET,
         windowMs: RATE_LIMIT_RESET_WINDOW_MS,
       })

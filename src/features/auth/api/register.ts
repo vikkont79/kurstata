@@ -23,7 +23,7 @@ export async function register(
     const clientIp = getClientIp(await headers())
     if (clientIp) {
       const rl = await isRateLimited({
-        key: clientIp,
+        key: `register:${clientIp}`,
         limit: RATE_LIMIT_REGISTER,
         windowMs: RATE_LIMIT_REGISTER_WINDOW_MS,
       })

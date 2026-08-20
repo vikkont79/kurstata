@@ -48,7 +48,7 @@ export async function login(input: unknown): Promise<{ success: true; user: User
       const clientIp = getClientIp(await headers())
       if (clientIp) {
         const rl = await isRateLimited({
-          key: `${clientIp}:${email}`,
+          key: `login:${clientIp}:${email}`,
           limit: MAX_FAILED_ATTEMPTS,
           windowMs: LOGIN_FAIL_WINDOW_MS,
         })

@@ -9,7 +9,7 @@ export type PendingRegistration = {
   code: string
 }
 
-const keyFor = (email: string): string => `kurstata:pending:${email.toLowerCase()}`
+const keyFor = (email: string): string => `kurstata:pending:${email}`
 
 const generateConfirmationCode = (length = CONFIRM_CODE_LENGTH): string => {
   return String(randomInt(0, 10 ** length)).padStart(length, '0')
@@ -29,7 +29,7 @@ const deletePendingRegistration = async (email: string): Promise<void> => {
   await redis.del(keyFor(email))
 }
 
-const lastSentKeyFor = (email: string): string => `kurstata:pending:last-sent:${email.toLowerCase()}`
+const lastSentKeyFor = (email: string): string => `kurstata:pending:last-sent:${email}`
 
 const getLastSentMs = async (email: string): Promise<number> => {
   const raw = await redis.get<number>(lastSentKeyFor(email))

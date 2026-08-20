@@ -29,7 +29,7 @@ export async function resendRegistrationCode(
     const clientIp = getClientIp(await headers())
     if (clientIp) {
       const rl = await isRateLimited({
-        key: clientIp,
+        key: `resend:${clientIp}`,
         limit: RATE_LIMIT_RESEND,
         windowMs: RATE_LIMIT_RESEND_WINDOW_MS,
       })
