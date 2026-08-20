@@ -46,6 +46,15 @@ export const RATE_LIMIT_CONFIRM = 5
 /** Окно (в миллисекундах) для лимита попыток подтверждения. */
 export const RATE_LIMIT_CONFIRM_WINDOW_MS = 15 * 60 * 1000
 
+/** Пауза между повторными отправками кода на один email. */
+export const RESEND_COOLDOWN_MS = 60 * 1000
+
+/** Лимит повторных отправок кода с одного IP за окно (окно = жизни pending). */
+export const RATE_LIMIT_RESEND = 5
+
+/** Окно (в миллисекундах) для per-IP лимита повторных отправок — совпадает с TTL pending. */
+export const RATE_LIMIT_RESEND_WINDOW_MS = 15 * 60 * 1000
+
 // --- Rate limiting (Upstash) ---
 
 /** Лимит регистраций с одного IP в час. */

@@ -36,8 +36,13 @@ export const confirmSchema = z.object({
   code: z.string().trim().regex(/^\d{6}$/, 'Код — 6 цифр'),
 })
 
+export const resendSchema = z.object({
+  email: z.string().trim().min(1, 'Введите email').pipe(z.email('Некорректный email')),
+})
+
 export type LoginValues = z.infer<typeof loginSchema>
 export type RegisterValues = z.infer<typeof registerSchema>
 export type RequestResetValues = z.infer<typeof requestResetSchema>
 export type ResetPasswordValues = z.infer<typeof resetPasswordSchema>
 export type ConfirmValues = z.infer<typeof confirmSchema>
+export type ResendValues = z.infer<typeof resendSchema>

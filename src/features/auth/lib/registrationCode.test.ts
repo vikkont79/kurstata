@@ -11,10 +11,11 @@ vi.mock('@/shared/lib/redis', () => ({
 vi.mock('@/shared/lib/auth', () => ({
   CONFIRM_CODE_LENGTH: 6,
   PENDING_REGISTER_TTL_MS: 15 * 60 * 1000,
+  RESEND_COOLDOWN_MS: 60 * 1000,
 }))
 
 import { randomInt } from 'node:crypto'
-import { generateConfirmationCode } from './registrationCode'
+import { generateConfirmationCode, getResendCooldownRemainingMs } from './registrationCode'
 
 const mockedRandomInt = randomInt as unknown as Mock<() => number>
 
@@ -52,5 +53,25 @@ describe('generateConfirmationCode', () => {
     expect(generateConfirmationCode()).toBe('000000')
     mockedRandomInt.mockReturnValue(999999)
     expect(generateConfirmationCode()).toBe('999999')
+  })
+})
+
+describe('getResendCooldownRemainingMs', () => {
+  const COOLDOWN = 60 * 1000
+
+  it('возвращает 0 если письмо не отправлялось', () => {
+    expect(getResendCooldownRemainingMs(0, 1_000_000)).toBe(0)
+  })
+
+  it('возвращает остаток если cooldown ещё активен', () => {
+    expect(getResendCooldownRemainingMs(1000, 2000)).toBe(COOLDOWN - 1000)
+  })
+
+  it('возвращает 0 когда cooldown истёк ровно в границе', () => {
+    expect(getResendCooldownRemainingMs(1000, 1000 + COOLDOWN)).toBe(0)
+  })
+
+  it('возвращает 0 когда cooldown давно истёк', () => {
+    expect(getResendCooldownRemainingMs(1000, 1_000_000)).toBe(0)
   })
 })
