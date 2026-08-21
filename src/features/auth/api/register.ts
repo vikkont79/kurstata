@@ -5,15 +5,15 @@ import { eq } from 'drizzle-orm'
 import { db } from '@db/client'
 import { users } from '@db/schema'
 import { registerSchema } from '@/features/auth/types'
-import { hashPassword, RATE_LIMIT_REGISTER, RATE_LIMIT_REGISTER_WINDOW_MS } from '@/shared/lib/auth'
+import { hashPassword, RATE_LIMIT_REGISTER, RATE_LIMIT_REGISTER_WINDOW_MS, RESEND_COOLDOWN_MS } from '@/shared/lib/auth'
 import { isRateLimited, formatRateLimitMessage } from '@/shared/lib/redis'
 import { getClientIp } from '@/shared/lib/getClientIp'
-import { generateConfirmationCode, savePendingRegistration, deletePendingRegistration } from '@/features/auth/lib/registrationCode'
+import { generateConfirmationCode, savePendingRegistration, deletePendingRegistration, setLastSentMs } from '@/features/auth/lib/registrationCode'
 import { getEmailSender } from '@/shared/lib/email'
 
 export async function register(
   input: unknown,
-): Promise<{ success: true; email: string } | { success: false; error: string }> {
+): Promise<{ success: true; email: string; cooldownMs: number } | { success: false; error: string }> {
   try {
     const parsed = registerSchema.safeParse(input)
     if (!parsed.success) {
@@ -59,7 +59,8 @@ export async function register(
       return { success: false, error: 'Не удалось отправить письмо. Попробуйте позже' }
     }
 
-    return { success: true, email }
+    await setLastSentMs(email)
+    return { success: true, email, cooldownMs: RESEND_COOLDOWN_MS }
   } catch (err) {
     console.error('register: ошибка регистрации', err)
     return { success: false, error: 'Не удалось создать аккаунт. Попробуйте позже' }

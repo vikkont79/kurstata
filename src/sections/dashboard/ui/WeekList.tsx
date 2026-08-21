@@ -29,7 +29,7 @@ const WeekList = ({ weeks }: WeekListProps) => {
         {weeks.map(week => (
           <li
             key={week.weekStart}
-            className="rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 overflow-hidden"
+            className="px-4 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 overflow-hidden"
           >
             <button
               onClick={() => toggleWeek(week.weekStart)}
@@ -41,7 +41,7 @@ const WeekList = ({ weeks }: WeekListProps) => {
               </span>
             </button>
 
-            <div className="px-4 py-3 grid grid-cols-3 gap-x-4 gap-y-2 text-sm">
+            <div className="py-3 grid grid-cols-3 gap-x-4 gap-y-2 text-sm">
               <MetricCell label="Часы" value={formatHours(week.hours)} />
               <MetricCell label="Заказы" value={String(week.orders)} />
               <MetricCell label="Заказы/час" value={formatRate(week.ordersPerHour)} />
@@ -51,7 +51,7 @@ const WeekList = ({ weeks }: WeekListProps) => {
             </div>
 
             {expandedWeeks.has(week.weekStart) && (
-              <ul className="border-t border-zinc-100 dark:border-zinc-800">
+              <ul className="py-4 border-t border-zinc-100 dark:border-zinc-800">
                 {week.days.map(day => (
                   <li
                     key={day.date}
@@ -59,12 +59,12 @@ const WeekList = ({ weeks }: WeekListProps) => {
                   >
                     <button
                       onClick={() => router.push(`/add?date=${day.date}`)}
-                      className="w-full flex items-center gap-4 px-4 py-2.5 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+                      className="w-full flex items-center gap-2 px-4 py-2.5 text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
                     >
                       <span className="w-24 text-left text-zinc-600 dark:text-zinc-400 font-medium shrink-0">
                         {day.label}
                       </span>
-                      <span className="flex gap-4 flex-1">
+                      <span className="flex gap-2 flex-1">
                         <span className="flex-1 text-zinc-800 dark:text-zinc-200">{formatHours(day.hours)}</span>
                         <span className="flex-1 text-zinc-800 dark:text-zinc-200">{day.orders}</span>
                         <span className="flex-1 text-zinc-800 dark:text-zinc-200">{formatSum(day.total)}</span>
