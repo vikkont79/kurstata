@@ -30,6 +30,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+# local debug scripts (parse ../.env, not for the repo)
+/scripts/*.debug.ts
+
 # env files (can opt-in for committing if needed)
 .env*
 !.env.example

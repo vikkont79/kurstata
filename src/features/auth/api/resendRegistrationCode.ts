@@ -13,11 +13,16 @@ import {
 import { getEmailSender } from '@/shared/lib/email'
 import { isRateLimited, formatRateLimitMessage } from '@/shared/lib/redis'
 import { getClientIp } from '@/shared/lib/getClientIp'
-import { RATE_LIMIT_RESEND, RATE_LIMIT_RESEND_WINDOW_MS } from '@/shared/lib/auth'
+import { RATE_LIMIT_RESEND, RATE_LIMIT_RESEND_WINDOW_MS, RESEND_COOLDOWN_MS } from '@/shared/lib/auth'
+import { getResendCountdownSeconds } from '@/features/auth/lib/resendCountdown'
+
+type ResendRegistrationResult =
+  | { success: true; cooldownMs: number }
+  | { success: false; error: string; cooldownMs?: number }
 
 export async function resendRegistrationCode(
   input: unknown,
-): Promise<{ success: true } | { success: false; error: string }> {
+): Promise<ResendRegistrationResult> {
   try {
     const parsed = resendSchema.safeParse(input)
     if (!parsed.success) {
@@ -43,9 +48,14 @@ export async function resendRegistrationCode(
       return { success: false, error: 'Время вышло. Начните регистрацию заново' }
     }
 
-    const remainingMs = getResendCooldownRemainingMs(await getLastSentMs(email))
+    const lastSentMs = await getLastSentMs(email)
+    const remainingMs = getResendCooldownRemainingMs(lastSentMs)
     if (remainingMs > 0) {
-      return { success: false, error: `Новый код можно запросить через ${Math.ceil(remainingMs / 1000)} с` }
+      return {
+        success: false,
+        error: `Новый код можно запросить через ${getResendCountdownSeconds(lastSentMs + RESEND_COOLDOWN_MS)} с`,
+        cooldownMs: remainingMs,
+      }
     }
 
     const code = generateConfirmationCode()
@@ -59,7 +69,7 @@ export async function resendRegistrationCode(
 
     await setLastSentMs(email)
 
-    return { success: true }
+    return { success: true, cooldownMs: RESEND_COOLDOWN_MS }
   } catch (err) {
     console.error('resendRegistrationCode: ошибка', err)
     return { success: false, error: 'Не удалось отправить письмо. Попробуйте позже' }

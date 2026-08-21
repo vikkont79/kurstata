@@ -11,8 +11,13 @@ import {
   clearSessionCookie,
   hashResetToken,
   isResetTokenExpired,
+  RATE_LIMIT_RESET_PASSWORD,
+  RATE_LIMIT_RESET_PASSWORD_WINDOW_MS,
 } from '@/shared/lib/auth'
 import { getEmailSender } from '@/shared/lib/email'
+import { isRateLimited, formatRateLimitMessage } from '@/shared/lib/redis'
+import { getClientIp } from '@/shared/lib/getClientIp'
+import { headers } from 'next/headers'
 
 export async function resetPassword(
   token: string,
@@ -22,6 +27,19 @@ export async function resetPassword(
     const parsed = resetPasswordSchema.safeParse(input)
     if (!parsed.success) {
       return { success: false, error: parsed.error.issues[0]?.message ?? 'Ошибка валидации' }
+    }
+
+    const clientIp = getClientIp(await headers())
+
+    if (clientIp) {
+      const rl = await isRateLimited({
+        key: `reset-password:${clientIp}`,
+        limit: RATE_LIMIT_RESET_PASSWORD,
+        windowMs: RATE_LIMIT_RESET_PASSWORD_WINDOW_MS,
+      })
+      if (!rl.allowed) {
+        return { success: false, error: formatRateLimitMessage(rl.reset) }
+      }
     }
 
     const tokenHash = hashResetToken(token)

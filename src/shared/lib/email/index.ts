@@ -1,17 +1,14 @@
 import { consoleSender } from './consoleSender'
 import { createResendSender } from './resendSender'
 import type { EmailSender } from './types'
-
-const isEmailDeliveryEnabled = (): boolean => {
-  return Boolean(process.env.RESEND_API_KEY)
-}
+import { env } from '@/shared/lib/env'
 
 const getEmailSender = (): EmailSender => {
-  if (isEmailDeliveryEnabled()) {
-    return createResendSender(process.env.RESEND_API_KEY as string)
+  if (env.RESEND_API_KEY) {
+    return createResendSender(env.RESEND_API_KEY)
   }
 
   return consoleSender
 }
 
-export { getEmailSender, isEmailDeliveryEnabled }
+export { getEmailSender }

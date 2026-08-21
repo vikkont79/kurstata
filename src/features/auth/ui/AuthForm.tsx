@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useRouter } from 'next/navigation'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -21,10 +21,13 @@ import { register } from '@/features/auth/api/register'
 import { confirmRegistration } from '@/features/auth/api/confirmRegistration'
 import { resendRegistrationCode } from '@/features/auth/api/resendRegistrationCode'
 import { ForgotPasswordModal, FORGOT_PASSWORD_MODAL_ID } from '@/features/auth/ui/ForgotPasswordModal'
+import { ResendCooldown } from '@/features/auth/ui/ResendCooldown'
 
 type Mode = 'login' | 'register'
 
 const AUTH_MODAL_ID = 'auth-modal'
+
+const cooldownEndsIn = (ms: number): number => Date.now() + ms
 
 const AuthForm = ({ returnTo }: { returnTo?: string }) => {
   const router = useRouter()
@@ -32,6 +35,9 @@ const AuthForm = ({ returnTo }: { returnTo?: string }) => {
   const [pendingEmail, setPendingEmail] = useState<string | null>(null)
   const [serverError, setServerError] = useState<string | null>(null)
   const [isResending, setIsResending] = useState(false)
+  const [cooldownEndsAt, setCooldownEndsAt] = useState(0)
+
+  const handleCooldownEnd = useCallback(() => setCooldownEndsAt(0), [])
 
   const isLogin = mode === 'login'
 
@@ -53,6 +59,7 @@ const AuthForm = ({ returnTo }: { returnTo?: string }) => {
     setPendingEmail(null)
     setServerError(null)
     setIsResending(false)
+    setCooldownEndsAt(0)
     registerForm.reset()
     confirmForm.reset({ email: '', code: '' })
   }
@@ -106,6 +113,7 @@ const AuthForm = ({ returnTo }: { returnTo?: string }) => {
         return
       }
       setPendingEmail(result.email)
+      setCooldownEndsAt(cooldownEndsIn(result.cooldownMs))
       confirmForm.reset({ email: result.email, code: '' })
       toast.success('Код отправлен на почту')
     } catch {
@@ -128,6 +136,7 @@ const AuthForm = ({ returnTo }: { returnTo?: string }) => {
 
       toast.success('Регистрация завершена')
       setPendingEmail(null)
+      setCooldownEndsAt(0)
       closeModal()
       redirectAfterAuth()
     } catch {
@@ -145,11 +154,18 @@ const AuthForm = ({ returnTo }: { returnTo?: string }) => {
       const result = await resendRegistrationCode({ email: pendingEmail })
 
       if (!result.success) {
-        setServerError(result.error)
-        toast.error('Не удалось отправить код')
+        if (result.cooldownMs) {
+          setCooldownEndsAt(cooldownEndsIn(result.cooldownMs))
+        } else {
+          setServerError(result.error)
+          toast.error('Не удалось отправить код')
+        }
         return
       }
 
+      setCooldownEndsAt(cooldownEndsIn(result.cooldownMs))
+      confirmForm.setValue('code', '')
+      confirmForm.setFocus('code')
       toast.success('Новый код отправлен')
     } catch {
       setServerError('Не удалось связаться с сервером. Попробуйте позже')
@@ -215,12 +231,14 @@ const AuthForm = ({ returnTo }: { returnTo?: string }) => {
 
             <button
               type="button"
-              disabled={isResending}
+              disabled={isResending || cooldownEndsAt > 0}
               className="self-center text-sm text-zinc-600 hover:underline disabled:opacity-60 dark:text-zinc-400"
               onClick={handleResend}
             >
               {isResending ? 'Отправляем…' : 'Отправить код повторно'}
             </button>
+
+            <ResendCooldown endsAt={cooldownEndsAt} onEnd={handleCooldownEnd} />
 
             <button
               type="button"
