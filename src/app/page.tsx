@@ -1,8 +1,10 @@
 import type { Metadata } from 'next'
-import { DashboardPage } from '@/sections/dashboard'
+import { redirect } from 'next/navigation'
+import { DemoSection } from '@/sections/demo'
+import { getCurrentUser } from '@/shared/api/getCurrentUser'
 
 export const metadata: Metadata = {
-  title: 'Дашборд',
+  title: 'Kurstata — учёт рабочих смен',
 }
 
 export default async function Home({
@@ -11,5 +13,16 @@ export default async function Home({
   searchParams: Promise<{ auth?: string; from?: string; reset?: string }>
 }) {
   const { auth, from, reset } = await searchParams
-  return <DashboardPage openAuthOnMount={auth === 'open'} returnTo={from} resetToken={reset} />
+
+  let user = null
+  try {
+    user = await getCurrentUser()
+  } catch {
+    user = null
+  }
+  if (user) {
+    redirect('/dashboard')
+  }
+
+  return <DemoSection openAuthOnMount={auth === 'open'} returnTo={from} resetToken={reset} />
 }

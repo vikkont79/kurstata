@@ -3,8 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { MetricCell } from '@/shared/ui'
-import { formatHours, formatRate, formatSum } from '@/sections/dashboard/lib/format'
-import type { WeekSummary } from '@/sections/dashboard/types'
+import { formatHours, formatRate, formatSum } from '@/widgets/week-list/lib/format'
+import type { WeekSummary } from '@/widgets/week-list/types'
 
 type WeekListProps = {
   weeks: WeekSummary[]

@@ -80,13 +80,7 @@ const AuthForm = ({ returnTo }: { returnTo?: string }) => {
   }
 
   const redirectAfterAuth = () => {
-    if (safeReturnTo) {
-      router.replace(safeReturnTo)
-    } else {
-      const url = new URL(window.location.href)
-      url.searchParams.delete('auth')
-      router.replace(url.pathname + url.search, { scroll: false })
-    }
+    router.replace(safeReturnTo ?? '/dashboard', { scroll: false })
   }
 
   const onSubmitRegister = async (data: RegisterValues) => {
