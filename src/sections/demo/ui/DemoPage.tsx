@@ -2,7 +2,7 @@ import { Header } from '@/widgets/header'
 import { WeekList } from '@/widgets/week-list'
 import { getMockWeeks } from '../lib/mockData'
 
-const DemoSection = ({
+const DemoPage = ({
   openAuthOnMount,
   returnTo,
   resetToken,
@@ -39,4 +39,4 @@ const DemoSection = ({
   )
 }
 
-export { DemoSection }
+export { DemoPage }
