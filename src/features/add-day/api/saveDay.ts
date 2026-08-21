@@ -43,7 +43,7 @@ export async function saveDay(input: unknown): Promise<{ success: true } | { suc
       )
     })
 
-    revalidatePath('/')
+    revalidatePath('/dashboard')
 
     return { success: true }
   } catch (err) {

@@ -1,20 +1,12 @@
 import { getDashboardData } from '@/sections/dashboard/api/getDashboardData'
 import { getCurrentUser } from '@/shared/api/getCurrentUser'
 import { Header } from '@/widgets/header'
-import { WeekList } from '@/sections/dashboard/ui/WeekList'
+import { WeekList } from '@/widgets/week-list'
 import { ErrorState } from '@/shared/ui'
 import type { User } from '@/entities/user'
-import type { WeekSummary } from '@/sections/dashboard/types'
+import type { WeekSummary } from '@/widgets/week-list'
 
-const DashboardPage = async ({
-  openAuthOnMount,
-  returnTo,
-  resetToken,
-}: {
-  openAuthOnMount?: boolean
-  returnTo?: string
-  resetToken?: string
-}) => {
+const DashboardPage = async () => {
   let user: User | null = null
   let sessionError = false
   try {
@@ -40,9 +32,6 @@ const DashboardPage = async ({
         link={{ href: '/add', label: '+ Добавить день' }}
         className="w-full max-w-4xl mx-auto px-4 pt-10"
         user={user}
-        openAuthOnMount={openAuthOnMount}
-        returnTo={returnTo}
-        resetToken={resetToken}
         sessionError={sessionError}
       />
       <main className="flex flex-1 flex-col w-full max-w-4xl mx-auto px-4 pt-6 pb-10 gap-6">

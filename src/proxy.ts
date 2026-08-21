@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { verifySessionToken } from '@/shared/lib/auth'
 // Напрямую по пути файла, не через баррель — баррель тащит серверные модули в клиентскую сборку
 import { AUTH_COOKIE_NAME } from '@/shared/lib/auth/constants'
+import { isActiveSession } from '@/shared/lib/auth/activeSession'
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const token = request.cookies.get(AUTH_COOKIE_NAME)?.value
-  if (!token || !verifySessionToken(token)) {
-    const url = new URL(request.url)
-    url.pathname = '/'
+  if (!token || !(await isActiveSession(token))) {
+    // Чистый URL без query исходного запроса — только auth и from
+    const url = new URL('/', request.url)
     url.searchParams.set('auth', 'open')
     url.searchParams.set('from', request.nextUrl.pathname + request.nextUrl.search)
     return NextResponse.redirect(url)
@@ -17,5 +17,5 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: '/add/:path*',
+  matcher: ['/add/:path*', '/dashboard/:path*'],
 }

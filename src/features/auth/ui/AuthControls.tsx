@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { Button } from '@/shared/ui/button/Button'
 import { ConfirmModal } from '@/shared/ui/confirm-modal/ConfirmModal'
@@ -21,6 +21,7 @@ interface AuthControlsProps {
 
 const AuthControls = ({ userName, openAuthOnMount, returnTo, resetToken, sessionError }: AuthControlsProps) => {
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   useEffect(() => {
     if (!openAuthOnMount || userName) {
@@ -30,7 +31,7 @@ const AuthControls = ({ userName, openAuthOnMount, returnTo, resetToken, session
     if (dialog instanceof HTMLDialogElement) {
       dialog.showModal()
     }
-  }, [openAuthOnMount, userName])
+  }, [openAuthOnMount, userName, searchParams])
 
   useEffect(() => {
     if (sessionError) {

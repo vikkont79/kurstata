@@ -27,18 +27,4 @@ function formatWeekRange(weekStart: string): string {
   return `${day(start)}.${month(start)}.${year(start)}-${day(end)}.${month(end)}.${year(end)}`
 }
 
-function formatHours(v: number): string {
-  const rounded = Math.round(v * 10) / 10
-  return Number.isInteger(rounded) ? `${rounded} ч` : `${rounded.toFixed(1)} ч`
-}
-
-function formatRate(v: number): string {
-  const rounded = Math.round(v * 10) / 10
-  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1)
-}
-
-function formatSum(v: number): string {
-  return `${Math.round(v).toLocaleString('ru-RU')} ₽`
-}
-
-export { DAY_NAMES, round1, formatDayLabel, formatWeekRange, formatHours, formatRate, formatSum }
+export { DAY_NAMES, round1, formatDayLabel, formatWeekRange }

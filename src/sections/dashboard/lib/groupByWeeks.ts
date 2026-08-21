@@ -1,4 +1,4 @@
-import type { WeekSummary, DaySummary } from '@/sections/dashboard/types'
+import type { WeekSummary, DaySummary } from '@/widgets/week-list'
 import { formatDayLabel, formatWeekRange, round1 } from '@/sections/dashboard/lib/format'
 
 function getWeekStart(dateStr: string): string {
