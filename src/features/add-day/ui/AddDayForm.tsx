@@ -11,6 +11,7 @@ import { Label } from '@/shared/ui/label/Label'
 import { ConfirmModal } from '@/shared/ui/confirm-modal/ConfirmModal'
 import { addDaySchema, type AddDayValues } from '@/features/add-day/types'
 import { saveDay } from '@/features/add-day/api/saveDay'
+import { deleteDay } from '@/features/add-day/api/deleteDay'
 import { useDayDraft } from '@/features/add-day/lib'
 import type { DayWithShifts } from '@/entities/day/types'
 
@@ -43,6 +44,7 @@ const AddDayForm = ({ initialData }: { initialData?: DayWithShifts }) => {
   const identity = initialData?.date ?? 'new'
   const [deleteIndex, setDeleteIndex] = useState<number | null>(null)
   const [serverError, setServerError] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
   const isEditing = !!initialData
   const { draft, scheduleSave, flush, clearDraft } = useDayDraft(identity)
 
@@ -86,6 +88,31 @@ const AddDayForm = ({ initialData }: { initialData?: DayWithShifts }) => {
   const handleReset = () => {
     reset(getDefaultValues(initialData))
     clearDraft()
+  }
+
+  const handleDeleteDay = async () => {
+    if (!initialData) return
+    setServerError(null)
+    setIsDeleting(true)
+
+    try {
+      const result = await deleteDay(initialData.date)
+
+      if (!result.success) {
+        setServerError(result.error)
+        toast.error('Ошибка удаления')
+        return
+      }
+
+      clearDraft()
+      toast.success('День удалён')
+      router.push('/dashboard')
+    } catch {
+      setServerError('Не удалось удалить день. Попробуйте позже')
+      toast.error('Ошибка удаления')
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
   const onSubmit = async (data: AddDayValues) => {
@@ -237,6 +264,19 @@ const AddDayForm = ({ initialData }: { initialData?: DayWithShifts }) => {
             Сбросить
           </Button>
         </div>
+
+        {isEditing && (
+          <Button
+            type="button"
+            variant="danger"
+            disabled={isDeleting}
+            commandfor="delete-day-modal"
+            command="show-modal"
+            className="self-center"
+          >
+            {isDeleting ? 'Удаляем…' : 'Удалить день'}
+          </Button>
+        )}
       </form>
 
       <ConfirmModal
@@ -259,6 +299,14 @@ const AddDayForm = ({ initialData }: { initialData?: DayWithShifts }) => {
         message="Все введённые данные будут очищены."
         confirmLabel="Сбросить"
         onConfirm={handleReset}
+      />
+
+      <ConfirmModal
+        id="delete-day-modal"
+        title="Удалить день?"
+        message="День и все его смены будут удалены вместе со статистикой. Это действие нельзя отменить."
+        confirmLabel="Удалить"
+        onConfirm={handleDeleteDay}
       />
     </>
   )

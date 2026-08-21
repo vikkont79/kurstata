@@ -1,11 +1,22 @@
 import { db } from '@db/client'
 import { days, shifts } from '@db/schema'
-import { eq, inArray } from 'drizzle-orm'
+import { and, eq, gte, inArray } from 'drizzle-orm'
 import { groupIntoWeeks } from '@/sections/dashboard/lib/groupByWeeks'
 import { calcHours } from '@/sections/dashboard/lib/calcHours'
+import { getPeriodStart, type DashboardPeriod } from '@/sections/dashboard/lib/period'
 
-export async function getDashboardData(userId: string) {
-  const allDays = await db.select().from(days).where(eq(days.userId, userId)).orderBy(days.date)
+export async function getDashboardData(userId: string, period: DashboardPeriod = 'month') {
+  const periodStart = getPeriodStart(period)
+
+  const allDays = await db
+    .select()
+    .from(days)
+    .where(
+      periodStart
+        ? and(eq(days.userId, userId), gte(days.date, periodStart))
+        : eq(days.userId, userId),
+    )
+    .orderBy(days.date)
   const allShifts = allDays.length
     ? await db.select().from(shifts).where(inArray(shifts.dayId, allDays.map(day => day.id)))
     : []

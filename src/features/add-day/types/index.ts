@@ -9,8 +9,10 @@ const shiftSchema = z.object({
   { message: 'Начало должно быть раньше конца', path: ['endTime'] },
 )
 
+export const dayDateSchema = z.iso.date('Укажите корректную дату')
+
 export const addDaySchema = z.object({
-  date: z.iso.date('Укажите корректную дату'),
+  date: dayDateSchema,
   shifts: z.array(shiftSchema).min(1, 'Добавьте хотя бы одну смену').max(20, 'Максимум 20 смен за день'),
   dayTotal: z.number().min(0, 'Сумма должна быть >= 0').max(1000000, 'Слишком большая сумма'),
 })

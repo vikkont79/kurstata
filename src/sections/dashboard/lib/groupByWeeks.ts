@@ -1,7 +1,7 @@
 import type { WeekSummary, DaySummary } from '@/widgets/week-list'
 import { formatDayLabel, formatWeekRange, round1 } from '@/sections/dashboard/lib/format'
 
-function getWeekStart(dateStr: string): string {
+export function getWeekStart(dateStr: string): string {
   const d = new Date(dateStr + 'T00:00:00')
   const day = d.getDay()
   const diff = d.getDate() - day + (day === 0 ? -6 : 1)

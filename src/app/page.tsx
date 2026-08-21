@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
-import { DemoSection } from '@/sections/demo'
+import { DemoPage } from '@/sections/demo'
 import { getCurrentUser } from '@/shared/api/getCurrentUser'
 
 export const metadata: Metadata = {
@@ -24,5 +24,5 @@ export default async function Home({
     redirect('/dashboard')
   }
 
-  return <DemoSection openAuthOnMount={auth === 'open'} returnTo={from} resetToken={reset} />
+  return <DemoPage openAuthOnMount={auth === 'open'} returnTo={from} resetToken={reset} />
 }

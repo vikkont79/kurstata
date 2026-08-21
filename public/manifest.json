@@ -1,0 +1,26 @@
+{
+  "name": "Kurstata",
+  "short_name": "Kurstata",
+  "description": "Учёт рабочих смен: статистика по дням и неделям",
+  "id": "/dashboard",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "lang": "ru",
+  "background_color": "#fef08a",
+  "theme_color": "#fef08a",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
