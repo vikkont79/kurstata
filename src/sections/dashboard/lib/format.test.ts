@@ -16,10 +16,10 @@ describe('formatDayLabel', () => {
 
 describe('formatWeekRange', () => {
   it('в пределах одного месяца', () => {
-    expect(formatWeekRange('2026-08-03')).toBe('3-9.08.2026')
+    expect(formatWeekRange('2026-08-03')).toBe('3 - 9.08.2026')
   })
 
   it('через границу года', () => {
-    expect(formatWeekRange('2025-12-29')).toBe('29.12.2025-4.01.2026')
+    expect(formatWeekRange('2025-12-29')).toBe('29.12.2025 - 4.01.2026')
   })
 })
