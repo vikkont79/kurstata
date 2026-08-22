@@ -19,12 +19,12 @@ function formatWeekRange(weekStart: string): string {
   const year = (d: Date) => String(d.getFullYear())
 
   if (start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear()) {
-    return `${day(start)}-${day(end)}.${month(end)}.${year(end)}`
+    return `${day(start)} - ${day(end)}.${month(end)}.${year(end)}`
   }
   if (start.getFullYear() === end.getFullYear()) {
-    return `${day(start)}.${month(start)}-${day(end)}.${month(end)}.${year(end)}`
+    return `${day(start)}.${month(start)} - ${day(end)}.${month(end)}.${year(end)}`
   }
-  return `${day(start)}.${month(start)}.${year(start)}-${day(end)}.${month(end)}.${year(end)}`
+  return `${day(start)}.${month(start)}.${year(start)} - ${day(end)}.${month(end)}.${year(end)}`
 }
 
 export { DAY_NAMES, round1, formatDayLabel, formatWeekRange }

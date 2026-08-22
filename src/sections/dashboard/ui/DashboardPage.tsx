@@ -36,7 +36,7 @@ const DashboardPage = async ({ period = 'month' }: { period?: DashboardPeriod })
   return (
     <>
       <Header
-        title="Дашборд"
+        title="Статистика"
         link={{ href: '/add', label: '+ Добавить день' }}
         className="w-full max-w-4xl mx-auto px-4 pt-10"
         user={user}

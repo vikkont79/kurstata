@@ -16,7 +16,7 @@ const DemoPage = ({
   return (
     <>
       <Header
-        title="Kurstata"
+        title="Демо"
         link={{ href: '/add', label: '+ Добавить день' }}
         className="w-full max-w-4xl mx-auto px-4 pt-10"
         openAuthOnMount={openAuthOnMount}
