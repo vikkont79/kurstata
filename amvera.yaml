@@ -1,0 +1,15 @@
+meta:
+  environment: nodejs
+  toolchain:
+    name: pnpm
+    version: 22
+
+build:
+  additionalCommands: pnpm run build
+  artifacts:
+    "*": /
+    ".next": /.next
+
+run:
+  command: pnpm run start --hostname 0.0.0.0 --port 3000
+  containerPort: "3000"
